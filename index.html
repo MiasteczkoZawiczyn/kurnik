@@ -258,7 +258,7 @@
                 
                 let dobOrDeathInfo = `<p class="text-gray-600"><span class="font-bold">Data urodzenia:</span> ${chicken.dob}</p>`;
                 if (isDeceased) {
-                    dobOrDeathInfo = `<p class="text-gray-600"><span class="font-bold">Data śmierci:</span> ${chicken.dateOfDeath}</p>`;
+                    dobOrDeathInfo = `<p class="text-gray-600"><span class="font-bold">Data urodzenia:</span> ${chicken.dob}<br><span class="font-bold">Data śmierci:</span> ${chicken.dateOfDeath}</p>`;
                 }
 
                 card.innerHTML = `
@@ -331,4 +331,5 @@
     </script>
 </body>
 </html>
+
 

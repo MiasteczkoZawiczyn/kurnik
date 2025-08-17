@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kurnik</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Dodane biblioteki do generowania PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
         body {
@@ -86,6 +89,23 @@
             text-decoration: none;
             cursor: pointer;
         }
+        /* Style dla przycisku PDF */
+        .download-btn {
+          background: linear-gradient(90deg, #3b82f6, #10b981);
+          color: white;
+          font-weight: 600;
+          padding: 0.75rem 1.5rem;
+          border-radius: 9999px;
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .download-btn:hover {
+          transform: scale(1.05);
+          box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+        /* Klasa do ukrycia elementu w widoku PDF */
+        .hide-on-pdf {
+            display: none !important;
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-4 sm:p-8">
@@ -94,6 +114,8 @@
     <header class="w-full text-center py-8">
         <h1 class="text-4xl font-bold text-gray-800">Kurnik 🐔</h1>
         <p class="text-xl text-gray-600 mt-2">Lista kur</p>
+        <!-- Przycisk do pobierania PDF -->
+        <button id="download-pdf" class="download-btn mt-6">📄 Pobierz listę jako PDF</button>
     </header>
 
     <!-- Statystyki -->
@@ -113,10 +135,9 @@
     </div>
 
     <!-- Lista kur - zawartość będzie generowana dynamicznie przez JavaScript -->
-    <main class="w-full container bg-white rounded-xl shadow-lg p-6 sm:p-8 mb-8">
+    <main id="pdf-content" class="w-full container bg-white rounded-xl shadow-lg p-6 sm:p-8 mb-8">
         <h2 class="text-2xl font-bold text-gray-700 mb-4">Aktualna lista</h2>
-        
-        <!-- Pole wyszukiwania -->
+        <!-- Pole wyszukiwania - dodano klasę do ukrycia w PDF -->
         <div class="mb-6">
             <input type="text" id="search-input" placeholder="Wyszukaj po imieniu, gatunku lub dacie urodzenia..." class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
         </div>
@@ -317,6 +338,79 @@
             });
             renderChickens(filteredChickens, 'chicken-list');
         }
+        
+        /**
+         * Generates a multi-page PDF from the main content section, with page breaks, header, and footer.
+         */
+        async function generatePDF() {
+            const doc = new window.jspdf.jsPDF("p", "mm", "a4");
+            const pdfWidth = doc.internal.pageSize.getWidth();
+            const pdfHeight = doc.internal.pageSize.getHeight();
+            const margin = 10;
+            let pageNumber = 1;
+            
+            // Get current counts from the main app
+            const totalCount = document.getElementById('total-count').innerText;
+            const chickenCount = document.getElementById('chicken-count').innerText;
+            const roosterCount = document.getElementById('rooster-count').innerText;
+
+            const chickenList = document.getElementById('chicken-list');
+            const chickenCards = Array.from(chickenList.children);
+            const cardsPerPage = 12;
+
+            // Function to add header to a page
+            const addHeader = (pageNumber) => {
+                doc.setFontSize(13);
+                doc.text(`Aktualna lista: ${totalCount} `, margin, margin + 5);
+                doc.text(`Razem: ${totalCount} Kury: ${chickenCount}, Koguty: ${roosterCount}`, margin, margin + 12);
+                doc.line(margin, margin + 15, pdfWidth - margin, margin + 15);
+            };
+
+            // Function to add footer to a page
+            const addFooter = (pageNumber) => {
+                doc.setFontSize(10);
+                doc.text(`Generator PDF opracowany przez — O5K4R_ TECHNOLOGIC | Strona nr. ${pageNumber}`, pdfWidth - margin, pdfHeight - margin - 2, { align: 'right' });
+            };
+
+            // Loop through the cards and generate pages
+            for (let i = 0; i < chickenCards.length; i += cardsPerPage) {
+                // If not the first page, add a new one
+                if (i > 0) {
+                    doc.addPage();
+                    pageNumber++;
+                }
+
+                // Add header and footer to the new page
+                addHeader(pageNumber);
+                addFooter(pageNumber);
+
+                // Create a temporary container for the cards on this page
+                const tempDiv = document.createElement('div');
+                tempDiv.style.display = 'grid';
+                tempDiv.style.gridTemplateColumns = 'repeat(3, minmax(0, 1fr))';
+                tempDiv.style.gap = '24px';
+                tempDiv.style.padding = '0 10px'; // Matching the left/right margin
+
+                const cardsForPage = chickenCards.slice(i, i + cardsPerPage);
+                cardsForPage.forEach(card => tempDiv.appendChild(card.cloneNode(true)));
+                
+                document.body.appendChild(tempDiv);
+                
+                const canvas = await html2canvas(tempDiv, { scale: 2 });
+                const imgData = canvas.toDataURL("image/jpeg");
+                const imgProps = doc.getImageProperties(imgData);
+                const imgHeight = (imgProps.height * (pdfWidth - 2 * margin)) / imgProps.width;
+
+                // Add the image to the PDF, below the header
+                doc.addImage(imgData, 'JPEG', margin, margin + 20, pdfWidth - 2 * margin, imgHeight);
+
+                // Clean up the temporary div
+                document.body.removeChild(tempDiv);
+            }
+
+            doc.save("kurnik-lista.pdf");
+        }
+
 
         // Sortowanie i renderowanie kart po załadowaniu DOM
         window.addEventListener('DOMContentLoaded', (event) => {
@@ -353,10 +447,14 @@
             
             // Dodaj nasłuchiwanie na pole wyszukiwania
             document.getElementById('search-input').addEventListener('input', filterChickens);
+
+            // Dodaj nasłuchiwanie na przycisk pobierania PDF
+            document.getElementById('download-pdf').addEventListener('click', generatePDF);
         });
     </script>
 </body>
 </html>
+
 
 
 

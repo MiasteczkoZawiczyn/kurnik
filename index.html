@@ -19,6 +19,10 @@
             flex-direction: column;
             align-items: center;
             text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .chicken-card:hover {
+            transform: scale(1.03);
         }
         .chicken-card .image-wrapper {
             position: relative;
@@ -38,6 +42,15 @@
         }
         .chicken-card img:hover {
             transform: scale(1.05);
+        }
+        .deceased-card {
+            filter: grayscale(80%);
+            opacity: 0.7;
+            border: 2px solid #e5e7eb;
+        }
+        .deceased-card:hover {
+            transform: none;
+            box-shadow: none;
         }
         .modal {
             display: none;
@@ -83,11 +96,20 @@
     </header>
 
     <!-- Lista kur - zawartość będzie generowana dynamicznie przez JavaScript -->
-    <main class="w-full container bg-white rounded-xl shadow-lg p-6 sm:p-8">
+    <main class="w-full container bg-white rounded-xl shadow-lg p-6 sm:p-8 mb-8">
+        <h2 class="text-2xl font-bold text-gray-700 mb-4">Aktualna lista</h2>
         <div id="chicken-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             <!-- Tutaj zostaną wstawione karty kur i kogutów po załadowaniu strony -->
         </div>
     </main>
+
+    <!-- Sekcja dla kur, które odeszły -->
+    <section class="w-full container bg-white rounded-xl shadow-lg p-6 sm:p-8 mt-4">
+        <h2 class="text-2xl font-bold text-gray-700 mb-4">Kury, które odeszły 😔</h2>
+        <div id="deceased-chicken-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <!-- Tutaj zostaną wstawione karty zmarłych kur -->
+        </div>
+    </section>
 
     <!-- Modal do powiększania zdjęć -->
     <div id="imageModal" class="modal">
@@ -139,6 +161,12 @@
             { name: "Fredzia", species: "Rosa Czerwona", dob: "Marzec 2020", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Fredzia" },
             { name: "Jadzia", species: "Lenhorn", dob: "Nieznane (ok. 2016/2017)", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Jadzia" },
             { name: "Celina", species: "Rosa Czerwona", dob: "Marzec 2020", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Celina" },
+        ];
+
+        // Dane o kurach, które odeszły
+        const deceasedChickens = [
+            { name: "Kogut Stefan", species: "Kochin", dob: "2019", dateOfDeath: "12 Lipiec 2024", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Stefan" },
+            { name: "Zuzia", species: "Zielononóżka Kuropatwiana", dob: "2020", dateOfDeath: "10 Czerwiec 2024", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Zuzia" }
         ];
         
         // Tablica do mapowania polskich nazw miesięcy na liczby
@@ -202,15 +230,23 @@
         /**
          * Renders the chicken cards into the DOM.
          * @param {Array<Object>} chickens The array of chicken objects to render.
+         * @param {string} containerId The ID of the container element.
+         * @param {boolean} isDeceased Whether the chickens are deceased.
          */
-        function renderChickens(chickens) {
-            const container = document.getElementById('chicken-list');
+        function renderChickens(chickens, containerId, isDeceased = false) {
+            const container = document.getElementById(containerId);
+            if (!container) return; // Prevent errors if container not found
             container.innerHTML = ''; // Clear existing content
 
             chickens.forEach(chicken => {
                 const card = document.createElement('div');
-                card.className = "chicken-card bg-gray-50 rounded-lg p-4 shadow-sm transition-transform transform hover:scale-105";
+                card.className = `chicken-card bg-gray-50 rounded-lg p-4 shadow-sm ${isDeceased ? 'deceased-card' : ''}`;
                 
+                let dobOrDeathInfo = `<p class="text-gray-600"><span class="font-bold">Data urodzenia:</span> ${chicken.dob}</p>`;
+                if (isDeceased) {
+                    dobOrDeathInfo = `<p class="text-gray-600"><span class="font-bold">Data śmierci:</span> ${chicken.dateOfDeath}</p>`;
+                }
+
                 card.innerHTML = `
                     <div class="image-wrapper">
                         <img src="${chicken.image}" alt="${chicken.name}" onclick="openModal(this)">
@@ -219,9 +255,7 @@
                     <p class="text-gray-600 mt-1">
                         <span class="font-bold">Gatunek:</span> ${chicken.species}
                     </p>
-                    <p class="text-gray-600">
-                        <span class="font-bold">Data urodzenia:</span> ${chicken.dob}
-                    </p>
+                    ${dobOrDeathInfo}
                     <p class="text-gray-600">
                         <span class="font-bold">Nr. obrączki:</span> ${chicken.ringNumber}
                     </p>
@@ -256,9 +290,11 @@
             });
 
             // Renderuj posortowane karty
-            renderChickens(sortedChickens);
+            renderChickens(sortedChickens, 'chicken-list');
+            
+            // Renderuj karty zmarłych kur
+            renderChickens(deceasedChickens, 'deceased-chicken-list', true);
         });
     </script>
 </body>
 </html>
-

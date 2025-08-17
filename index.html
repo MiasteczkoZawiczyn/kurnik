@@ -305,15 +305,17 @@
 
             // Główne sortowanie
             sortedChickens.sort((a, b) => {
-                // Koguty zawsze na początku
+                // Koguty zawsze na początku, sortowanie według daty od najstarszych do najmłodszych
+                if (a.isRooster && b.isRooster) {
+                    return a.parsedDob.getTime() - b.parsedDob.getTime();
+                }
                 if (a.isRooster && !b.isRooster) {
                     return -1;
                 }
                 if (!a.isRooster && b.isRooster) {
                     return 1;
                 }
-
-                // Sortuj od najmłodszych do najstarszych (data malejąco)
+                // Kury sortowane od najmłodszych do najstarszych
                 return b.parsedDob.getTime() - a.parsedDob.getTime();
             });
 
@@ -329,3 +331,4 @@
     </script>
 </body>
 </html>
+

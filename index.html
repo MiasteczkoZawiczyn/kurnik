@@ -22,18 +22,17 @@
         }
         .chicken-card .image-wrapper {
             position: relative;
-            width: 150px; /* Szerokość kontenera */
-            height: 150px; /* Wysokość kontenera (kwadrat) */
+            width: 150px;
+            height: 150px;
             margin-bottom: 1rem;
             overflow: hidden;
-            /* Zmieniono: usunięto border-radius, aby obrazek był kwadratowy */
             border-radius: 0.5rem;
-            border: 2px solid #d1d5db; /* border-2 border-gray-300 */
+            border: 2px solid #d1d5db;
         }
         .chicken-card img {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Wypełnienie kwadratu, przycinając zdjęcie */
+            object-fit: cover;
             cursor: pointer;
             transition: transform 0.2s;
         }
@@ -83,302 +82,10 @@
         <p class="text-xl text-gray-600 mt-2">Lista kur</p>
     </header>
 
-    <!-- Lista kur -->
+    <!-- Lista kur - zawartość będzie generowana dynamicznie przez JavaScript -->
     <main class="w-full container bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <div id="chicken-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-
-            <!-- PRZYKŁAD ZMIENIONEGO BLOKU - SKOPIUJ TEN BLOK I ZMIEŃ DANE -->
-            <div class="chicken-card bg-gray-50 rounded-lg p-4 shadow-sm transition-transform transform hover:scale-105">
-                <!-- Wrapper do zdjęcia, który zapewnia, że będzie kwadratowe -->
-                <div class="image-wrapper">
-                    <img src="files/brakzdjecia.jpg" alt="Albert" onclick="openModal(this)">
-                </div>
-                <!-- Informacje o kurze -->
-                <h3 class="text-2xl font-semibold text-gray-900">Albert</h3>
-                <p class="text-gray-600 mt-1">
-                    <span class="font-bold">Gatunek:</span> Perliczki
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Data urodzenia:</span> Maj/Czerwiec 2025
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Nr. obrączki:</span> Nieznane
-                </p>
-            </div>
-
-            <!-- KOLEJNA KURA - ZMIENIONY PRZYKŁAD -->
-            <div class="chicken-card bg-gray-50 rounded-lg p-4 shadow-sm transition-transform transform hover:scale-105">
-                <div class="image-wrapper">
-                    <img src="files/brakzdjecia.jpg" alt="Miecia" onclick="openModal(this)">
-                </div>
-                <h3 class="text-2xl font-semibold text-gray-900">Miecia</h3>
-                <p class="text-gray-600 mt-1">
-                    <span class="font-bold">Gatunek:</span> Perliczki
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Data urodzenia:</span> Maj/Czerwiec 2025
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Nr. obrączki:</span> Nieznane
-                </p>
-            </div>
-
-
-            <!-- KOLEJNA KURA - ZMIENIONY PRZYKŁAD -->
-            <div class="chicken-card bg-gray-50 rounded-lg p-4 shadow-sm transition-transform transform hover:scale-105">
-                <div class="image-wrapper">
-                    <img src="files/brakzdjecia.jpg" alt="Melannia" onclick="openModal(this)">
-                </div>
-                <h3 class="text-2xl font-semibold text-gray-900">Melannia</h3>
-                <p class="text-gray-600 mt-1">
-                    <span class="font-bold">Gatunek:</span> Perliczki
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Data urodzenia:</span> Maj/Czerwiec 2025
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Nr. obrączki:</span> Nieznane
-                </p>
-            </div>
-            
-            <!-- KOLEJNA KURA - ZMIENIONY PRZYKŁAD -->
-            <div class="chicken-card bg-gray-50 rounded-lg p-4 shadow-sm transition-transform transform hover:scale-105">
-                <div class="image-wrapper">
-                    <img src="files/brakzdjecia.jpg" alt="Lucjan" onclick="openModal(this)">
-                </div>
-                <h3 class="text-2xl font-semibold text-gray-900">Kogut Lucjan</h3>
-                <p class="text-gray-600 mt-1">
-                    <span class="font-bold">Gatunek:</span> Rosa Jarzębata
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Data urodzenia:</span> 1 Lipiec 2024
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Nr. obrączki:</span> Nieznane
-                </p>
-            </div>
-            
-            <!-- KOLEJNA KURA - ZMIENIONY PRZYKŁAD -->
-            <div class="chicken-card bg-gray-50 rounded-lg p-4 shadow-sm transition-transform transform hover:scale-105">
-                <div class="image-wrapper">
-                    <img src="files/brakzdjecia.jpg" alt="Halińcia" onclick="openModal(this)">
-                </div>
-                <h3 class="text-2xl font-semibold text-gray-900">Halińcia</h3>
-                <p class="text-gray-600 mt-1">
-                    <span class="font-bold">Gatunek:</span> Rosa Lawendowa
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Data urodzenia:</span> 1 Lipiec 2024
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Nr. obrączki:</span> Nieznane
-                </p>
-            </div>
-            
-            <!-- KOLEJNA KURA - ZMIENIONY PRZYKŁAD -->
-            <div class="chicken-card bg-gray-50 rounded-lg p-4 shadow-sm transition-transform transform hover:scale-105">
-                <div class="image-wrapper">
-                    <img src="files/brakzdjecia.jpg" alt="Tereska" onclick="openModal(this)">
-                </div>
-                <h3 class="text-2xl font-semibold text-gray-900">Tereska</h3>
-                <p class="text-gray-600 mt-1">
-                    <span class="font-bold">Gatunek:</span> Zielononóżka Kuropatwiana
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Data urodzenia:</span> 1 Lipiec 2024
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Nr. obrączki:</span> Nieznane
-                </p>
-            </div>
-            
-            <!-- KOLEJNA KURA - ZMIENIONY PRZYKŁAD -->
-            <div class="chicken-card bg-gray-50 rounded-lg p-4 shadow-sm transition-transform transform hover:scale-105">
-                <div class="image-wrapper">
-                    <img src="files/brakzdjecia.jpg" alt="Danuta" onclick="openModal(this)">
-                </div>
-                <h3 class="text-2xl font-semibold text-gray-900">Danuta</h3>
-                <p class="text-gray-600 mt-1">
-                    <span class="font-bold">Gatunek:</span> Rosa Bląd z zielonymi nóżkami 
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Data urodzenia:</span> 1 Lipiec 2024
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Nr. obrączki:</span> Nieznane
-                </p>
-            </div>
-                        
-            <!-- KOLEJNA KURA - ZMIENIONY PRZYKŁAD -->
-            <div class="chicken-card bg-gray-50 rounded-lg p-4 shadow-sm transition-transform transform hover:scale-105">
-                <div class="image-wrapper">
-                    <img src="files/brakzdjecia.jpg" alt="Tekla" onclick="openModal(this)">
-                </div>
-                <h3 class="text-2xl font-semibold text-gray-900">Tekla</h3>
-                <p class="text-gray-600 mt-1">
-                    <span class="font-bold">Gatunek:</span> Czerwona Rosa 
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Data urodzenia:</span> Kwiecień 2023
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Nr. obrączki:</span> Nieznane
-                </p>
-            </div>
-                                    
-            <!-- KOLEJNA KURA - ZMIENIONY PRZYKŁAD -->
-            <div class="chicken-card bg-gray-50 rounded-lg p-4 shadow-sm transition-transform transform hover:scale-105">
-                <div class="image-wrapper">
-                    <img src="files/brakzdjecia.jpg" alt="Fredzia" onclick="openModal(this)">
-                </div>
-                <h3 class="text-2xl font-semibold text-gray-900">Fredzia</h3>
-                <p class="text-gray-600 mt-1">
-                    <span class="font-bold">Gatunek:</span> Rosa Czerwona
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Data urodzenia:</span> Marzec 2020
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Nr. obrączki:</span> Nieznane
-                </p>
-            </div>
-                                    
-            <!-- KOLEJNA KURA - ZMIENIONY PRZYKŁAD -->
-            <div class="chicken-card bg-gray-50 rounded-lg p-4 shadow-sm transition-transform transform hover:scale-105">
-                <div class="image-wrapper">
-                    <img src="files/brakzdjecia.jpg" alt="Jadzia" onclick="openModal(this)">
-                </div>
-                <h3 class="text-2xl font-semibold text-gray-900">Jadzia</h3>
-                <p class="text-gray-600 mt-1">
-                    <span class="font-bold">Gatunek:</span> Lenhorn
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Data urodzenia:</span> Nieznane (ok. 2016/2017)
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Nr. obrączki:</span> Nieznane
-                </p>
-            </div>
-                                                
-            <!-- KOLEJNA KURA - ZMIENIONY PRZYKŁAD -->
-            <div class="chicken-card bg-gray-50 rounded-lg p-4 shadow-sm transition-transform transform hover:scale-105">
-                <div class="image-wrapper">
-                    <img src="files/brakzdjecia.jpg" alt="Jadzia" onclick="openModal(this)">
-                </div>
-                <h3 class="text-2xl font-semibold text-gray-900">Celina</h3>
-                <p class="text-gray-600 mt-1">
-                    <span class="font-bold">Gatunek:</span> Rosa Czerwona
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Data urodzenia:</span> Marzec 2020
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Nr. obrączki:</span> Nieznane
-                </p>
-            </div>
-                                                
-            <!-- KOLEJNA KURA - ZMIENIONY PRZYKŁAD -->
-            <div class="chicken-card bg-gray-50 rounded-lg p-4 shadow-sm transition-transform transform hover:scale-105">
-                <div class="image-wrapper">
-                    <img src="files/brakzdjecia.jpg" alt="Czesia" onclick="openModal(this)">
-                </div>
-                <h3 class="text-2xl font-semibold text-gray-900">Czesia</h3>
-                <p class="text-gray-600 mt-1">
-                    <span class="font-bold">Gatunek:</span> Rosa Czerwona
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Data urodzenia:</span> ok. Marzec 2021
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Nr. obrączki:</span> Nieznane
-                </p>
-            </div>
-                                                
-            <!-- KOLEJNA KURA - ZMIENIONY PRZYKŁAD -->
-            <div class="chicken-card bg-gray-50 rounded-lg p-4 shadow-sm transition-transform transform hover:scale-105">
-                <div class="image-wrapper">
-                    <img src="files/brakzdjecia.jpg" alt="Benio" onclick="openModal(this)">
-                </div>
-                <h3 class="text-2xl font-semibold text-gray-900">Benio</h3>
-                <p class="text-gray-600 mt-1">
-                    <span class="font-bold">Gatunek:</span> Liliputki Polskie
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Data urodzenia:</span> Czerwiec/Lipiec 2025
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Nr. obrączki:</span> Nieznane
-                </p>
-            </div>
-                                                            
-            <!-- KOLEJNA KURA - ZMIENIONY PRZYKŁAD -->
-            <div class="chicken-card bg-gray-50 rounded-lg p-4 shadow-sm transition-transform transform hover:scale-105">
-                <div class="image-wrapper">
-                    <img src="files/brakzdjecia.jpg" alt="Mariolcia" onclick="openModal(this)">
-                </div>
-                <h3 class="text-2xl font-semibold text-gray-900">Mariolcia</h3>
-                <p class="text-gray-600 mt-1">
-                    <span class="font-bold">Gatunek:</span> Liliputki Polskie
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Data urodzenia:</span> Czerwiec/Lipiec 2025
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Nr. obrączki:</span> Nieznane
-                </p>
-            </div>
-                                                            
-            <!-- KOLEJNA KURA - ZMIENIONY PRZYKŁAD -->
-            <div class="chicken-card bg-gray-50 rounded-lg p-4 shadow-sm transition-transform transform hover:scale-105">
-                <div class="image-wrapper">
-                    <img src="files/brakzdjecia.jpg" alt="Gabrysia" onclick="openModal(this)">
-                </div>
-                <h3 class="text-2xl font-semibold text-gray-900">Gabrysia</h3>
-                <p class="text-gray-600 mt-1">
-                    <span class="font-bold">Gatunek:</span> Liliputki Polskie
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Data urodzenia:</span> Czerwiec/Lipiec 2025
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Nr. obrączki:</span> Nieznane
-                </p>
-            </div>
-                                                            
-            <!-- KOLEJNA KURA - ZMIENIONY PRZYKŁAD -->
-            <div class="chicken-card bg-gray-50 rounded-lg p-4 shadow-sm transition-transform transform hover:scale-105">
-                <div class="image-wrapper">
-                    <img src="files/brakzdjecia.jpg" alt="Henio" onclick="openModal(this)">
-                </div>
-                <h3 class="text-2xl font-semibold text-gray-900">Kogut Henio</h3>
-                <p class="text-gray-600 mt-1">
-                    <span class="font-bold">Gatunek:</span> Czarny typ włoszka Kogut
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Data urodzenia:</span> 24 Czerwiec 2025
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Nr. obrączki:</span> Nieznane
-                </p>
-            </div>
-                                                            
-            <!-- KOLEJNA KURA - ZMIENIONY PRZYKŁAD -->
-            <div class="chicken-card bg-gray-50 rounded-lg p-4 shadow-sm transition-transform transform hover:scale-105">
-                <div class="image-wrapper">
-                    <img src="files/brakzdjecia.jpg" alt="Edzia" onclick="openModal(this)">
-                </div>
-                <h3 class="text-2xl font-semibold text-gray-900">Edzia</h3>
-                <p class="text-gray-600 mt-1">
-                    <span class="font-bold">Gatunek:</span> Rosa Karmazyn z Zielonymi nóżkami
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Data urodzenia:</span> 24 Czerwiec 2025
-                </p>
-                <p class="text-gray-600">
-                    <span class="font-bold">Nr. obrączki:</span> Nieznane
-                </p>
-            </div>
-
+            <!-- Tutaj zostaną wstawione karty kur i kogutów po załadowaniu strony -->
         </div>
     </main>
 
@@ -412,6 +119,146 @@
                 closeModal();
             }
         }
+
+        // Dane o kurach i kogutach - teraz przechowywane w JS
+        const allChickens = [
+            { name: "Kogut Lucjan", species: "Rosa Jarzębata", dob: "1 Lipiec 2024", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Lucjan" },
+            { name: "Kogut Henio", species: "Czarny typ włoszka Kogut", dob: "24 Czerwiec 2025", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Henio" },
+            { name: "Mariolcia", species: "Liliputki Polskie", dob: "Czerwiec/Lipiec 2025", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Mariolcia" },
+            { name: "Gabrysia", species: "Liliputki Polskie", dob: "Czerwiec/Lipiec 2025", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Gabrysia" },
+            { name: "Benio", species: "Liliputki Polskie", dob: "Czerwiec/Lipiec 2025", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Benio" },
+            { name: "Edzia", species: "Rosa Karmazyn z Zielonymi nóżkami", dob: "24 Czerwiec 2025", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Edzia" },
+            { name: "Albert", species: "Perliczki", dob: "Maj/Czerwiec 2025", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Albert" },
+            { name: "Miecia", species: "Perliczki", dob: "Maj/Czerwiec 2025", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Miecia" },
+            { name: "Melannia", species: "Perliczki", dob: "Maj/Czerwiec 2025", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Melannia" },
+            { name: "Halińcia", species: "Rosa Lawendowa", dob: "1 Lipiec 2024", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Halincia" },
+            { name: "Tereska", species: "Zielononóżka Kuropatwiana", dob: "1 Lipiec 2024", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Tereska" },
+            { name: "Danuta", species: "Rosa Bląd z zielonymi nóżkami", dob: "1 Lipiec 2024", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Danuta" },
+            { name: "Tekla", species: "Czerwona Rosa", dob: "Kwiecień 2023", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Tekla" },
+            { name: "Czesia", species: "Rosa Czerwona", dob: "ok. Marzec 2021", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Czesia" },
+            { name: "Fredzia", species: "Rosa Czerwona", dob: "Marzec 2020", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Fredzia" },
+            { name: "Jadzia", species: "Lenhorn", dob: "Nieznane (ok. 2016/2017)", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Jadzia" },
+            { name: "Celina", species: "Rosa Czerwona", dob: "Marzec 2020", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Celina" },
+        ];
+        
+        // Tablica do mapowania polskich nazw miesięcy na liczby
+        const monthMap = {
+            "Styczeń": 0, "Luty": 1, "Marzec": 2, "Kwiecień": 3, "Maj": 4, "Czerwiec": 5,
+            "Lipiec": 6, "Sierpień": 7, "Wrzesień": 8, "Październik": 9, "Listopad": 10, "Grudzień": 11
+        };
+
+        /**
+         * Parses a Polish date string into a Date object.
+         * Handles formats like "1 Lipiec 2024", "Maj/Czerwiec 2025", "Nieznane".
+         * For unknown dates, it returns a very large timestamp to place them at the end.
+         * For month ranges, it takes the first month.
+         * @param {string} dateStr The date string to parse.
+         * @returns {Date} A Date object representing the date.
+         */
+        function parseDate(dateStr) {
+            // Check for unknown date, return a very old date to put it at the end
+            if (dateStr.includes("Nieznane")) {
+                return new Date(0); // A very early timestamp
+            }
+
+            // Remove "ok." prefix if present
+            dateStr = dateStr.replace("ok. ", "");
+
+            // Handle date with day, month, and year (e.g., "1 Lipiec 2024")
+            let parts = dateStr.split(" ");
+            if (parts.length >= 3) {
+                let day = parseInt(parts[0]);
+                let month = monthMap[parts[1]];
+                let year = parseInt(parts[2]);
+                if (!isNaN(day) && month !== undefined && !isNaN(year)) {
+                    return new Date(year, month, day);
+                }
+            }
+
+            // Handle date with just month and year (e.g., "Kwiecień 2023")
+            if (parts.length >= 2) {
+                let month = monthMap[parts[0]];
+                let year = parseInt(parts[1]);
+                if (month !== undefined && !isNaN(year)) {
+                    return new Date(year, month, 1);
+                }
+            }
+
+            // Handle date with month range (e.g., "Maj/Czerwiec 2025")
+            let monthRangeParts = dateStr.split("/");
+            if (monthRangeParts.length >= 2) {
+                let firstMonth = monthMap[monthRangeParts[0]];
+                let year = parseInt(monthRangeParts[1].split(" ")[1]);
+                if (firstMonth !== undefined && !isNaN(year)) {
+                    return new Date(year, firstMonth, 1);
+                }
+            }
+            
+            // If all parsing fails, return a very early date
+            console.error("Failed to parse date string:", dateStr);
+            return new Date(0);
+        }
+
+        /**
+         * Renders the chicken cards into the DOM.
+         * @param {Array<Object>} chickens The array of chicken objects to render.
+         */
+        function renderChickens(chickens) {
+            const container = document.getElementById('chicken-list');
+            container.innerHTML = ''; // Clear existing content
+
+            chickens.forEach(chicken => {
+                const card = document.createElement('div');
+                card.className = "chicken-card bg-gray-50 rounded-lg p-4 shadow-sm transition-transform transform hover:scale-105";
+                
+                card.innerHTML = `
+                    <div class="image-wrapper">
+                        <img src="${chicken.image}" alt="${chicken.name}" onclick="openModal(this)">
+                    </div>
+                    <h3 class="text-2xl font-semibold text-gray-900">${chicken.name}</h3>
+                    <p class="text-gray-600 mt-1">
+                        <span class="font-bold">Gatunek:</span> ${chicken.species}
+                    </p>
+                    <p class="text-gray-600">
+                        <span class="font-bold">Data urodzenia:</span> ${chicken.dob}
+                    </p>
+                    <p class="text-gray-600">
+                        <span class="font-bold">Nr. obrączki:</span> ${chicken.ringNumber}
+                    </p>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Sortowanie i renderowanie kart po załadowaniu DOM
+        window.addEventListener('DOMContentLoaded', (event) => {
+            // Dodajemy pole `isRooster` i `parsedDob` do każdego obiektu, aby ułatwić sortowanie
+            const sortedChickens = allChickens.map(chicken => {
+                return {
+                    ...chicken,
+                    isRooster: chicken.name.toLowerCase().includes('kogut'),
+                    parsedDob: parseDate(chicken.dob)
+                };
+            });
+
+            // Główne sortowanie
+            sortedChickens.sort((a, b) => {
+                // Koguty zawsze na początku
+                if (a.isRooster && !b.isRooster) {
+                    return -1;
+                }
+                if (!a.isRooster && b.isRooster) {
+                    return 1;
+                }
+
+                // Sortuj od najmłodszych do najstarszych (data malejąco)
+                return b.parsedDob.getTime() - a.parsedDob.getTime();
+            });
+
+            // Renderuj posortowane karty
+            renderChickens(sortedChickens);
+        });
     </script>
 </body>
 </html>
+

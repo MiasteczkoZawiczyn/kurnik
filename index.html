@@ -23,6 +23,7 @@
         }
         .chicken-card:hover {
             transform: scale(1.03);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
         .chicken-card .image-wrapper {
             position: relative;
@@ -98,6 +99,12 @@
     <!-- Lista kur - zawartość będzie generowana dynamicznie przez JavaScript -->
     <main class="w-full container bg-white rounded-xl shadow-lg p-6 sm:p-8 mb-8">
         <h2 class="text-2xl font-bold text-gray-700 mb-4">Aktualna lista</h2>
+        
+        <!-- Pole wyszukiwania -->
+        <div class="mb-6">
+            <input type="text" id="search-input" placeholder="Wyszukaj po imieniu, gatunku lub dacie urodzenia..." class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
         <div id="chicken-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             <!-- Tutaj zostaną wstawione karty kur i kogutów po załadowaniu strony -->
         </div>
@@ -174,6 +181,8 @@
             "Styczeń": 0, "Luty": 1, "Marzec": 2, "Kwiecień": 3, "Maj": 4, "Czerwiec": 5,
             "Lipiec": 6, "Sierpień": 7, "Wrzesień": 8, "Październik": 9, "Listopad": 10, "Grudzień": 11
         };
+        
+        let sortedChickens = []; // Global variable to store the initial sorted list
 
         /**
          * Parses a Polish date string into a Date object.
@@ -238,6 +247,11 @@
             if (!container) return; // Prevent errors if container not found
             container.innerHTML = ''; // Clear existing content
 
+            if (chickens.length === 0 && !isDeceased) {
+                container.innerHTML = `<p class="text-center text-gray-500 col-span-full">Brak pasujących kur lub kogutów.</p>`;
+                return;
+            }
+
             chickens.forEach(chicken => {
                 const card = document.createElement('div');
                 card.className = `chicken-card bg-gray-50 rounded-lg p-4 shadow-sm ${isDeceased ? 'deceased-card' : ''}`;
@@ -264,10 +278,24 @@
             });
         }
 
+        /**
+         * Filters the chicken list based on the search input.
+         */
+        function filterChickens() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const filteredChickens = sortedChickens.filter(chicken => {
+                const nameMatch = chicken.name.toLowerCase().includes(query);
+                const speciesMatch = chicken.species.toLowerCase().includes(query);
+                const dobMatch = chicken.dob.toLowerCase().includes(query);
+                return nameMatch || speciesMatch || dobMatch;
+            });
+            renderChickens(filteredChickens, 'chicken-list');
+        }
+
         // Sortowanie i renderowanie kart po załadowaniu DOM
         window.addEventListener('DOMContentLoaded', (event) => {
             // Dodajemy pole `isRooster` i `parsedDob` do każdego obiektu, aby ułatwić sortowanie
-            const sortedChickens = allChickens.map(chicken => {
+            sortedChickens = allChickens.map(chicken => {
                 return {
                     ...chicken,
                     isRooster: chicken.name.toLowerCase().includes('kogut'),
@@ -294,6 +322,9 @@
             
             // Renderuj karty zmarłych kur
             renderChickens(deceasedChickens, 'deceased-chicken-list', true);
+            
+            // Dodaj nasłuchiwanie na pole wyszukiwania
+            document.getElementById('search-input').addEventListener('input', filterChickens);
         });
     </script>
 </body>

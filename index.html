@@ -67,12 +67,40 @@
             background-color: rgba(0, 0, 0, 0.9);
             justify-content: center;
             align-items: center;
+            transition: opacity 0.3s ease-in-out;
+            opacity: 0;
         }
-        .modal-content {
-            max-width: 90%;
-            max-height: 90%;
+        .modal.show {
+            display: flex;
+            opacity: 1;
+        }
+        .gallery-container {
+            position: relative;
+            max-width: 90vw;
+            max-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden; /* Dodane aby przyciąć obraz poza widokiem */
+        }
+        .gallery-track {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            width: 100%;
+            height: 100%;
+        }
+        .gallery-image-wrapper {
+            flex-shrink: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .gallery-image {
+            max-width: 100%;
+            max-height: 100%;
             object-fit: contain;
-            border-radius: 1rem;
         }
         .close-button {
             position: absolute;
@@ -82,6 +110,7 @@
             font-size: 40px;
             font-weight: bold;
             transition: 0.3s;
+            z-index: 11;
         }
         .close-button:hover,
         .close-button:focus {
@@ -89,22 +118,66 @@
             text-decoration: none;
             cursor: pointer;
         }
-        /* Style dla przycisku PDF */
         .download-btn {
-          background: linear-gradient(90deg, #3b82f6, #10b981);
-          color: white;
-          font-weight: 600;
-          padding: 0.75rem 1.5rem;
-          border-radius: 9999px;
-          transition: transform 0.2s, box-shadow 0.2s;
+            background: linear-gradient(90deg, #3b82f6, #10b981);
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
         .download-btn:hover {
-          transform: scale(1.05);
-          box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
         }
-        /* Klasa do ukrycia elementu w widoku PDF */
         .hide-on-pdf {
             display: none !important;
+        }
+        /* Nowe style dla przycisków strzałek */
+        .gallery-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 1rem 1.5rem;
+            font-size: 2rem;
+            cursor: pointer;
+            z-index: 10;
+            transition: background 0.3s;
+        }
+        .gallery-arrow:hover {
+            background: rgba(0, 0, 0, 0.7);
+        }
+        .gallery-arrow.left {
+            left: 20px;
+            border-radius: 50%;
+        }
+        .gallery-arrow.right {
+            right: 20px;
+            border-radius: 50%;
+        }
+        /* Nowe style dla kropek nawigacyjnych */
+        .gallery-dots {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+        .dot {
+            width: 10px;
+            height: 10px;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .dot.active {
+            background-color: white;
         }
     </style>
 </head>
@@ -138,7 +211,7 @@
     <main id="pdf-content" class="w-full container bg-white rounded-xl shadow-lg p-6 sm:p-8 mb-8">
         <h2 class="text-2xl font-bold text-gray-700 mb-4">Aktualna lista</h2>
         <!-- Pole wyszukiwania - dodano klasę do ukrycia w PDF -->
-        <div class="mb-6">
+        <div class="mb-6 hide-on-pdf">
             <input type="text" id="search-input" placeholder="Wyszukaj po imieniu, gatunku lub dacie urodzenia..." class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
         </div>
 
@@ -158,24 +231,81 @@
     <!-- Modal do powiększania zdjęć -->
     <div id="imageModal" class="modal">
         <span class="close-button" onclick="closeModal()">&times;</span>
-        <img class="modal-content" id="modalImage">
+        <div class="gallery-container">
+            <!-- Nowe przyciski strzałek -->
+            <button id="prev-btn" class="gallery-arrow left" onclick="prevImage()">&#10094;</button>
+            <div id="gallery-track" class="gallery-track"></div>
+            <button id="next-btn" class="gallery-arrow right" onclick="nextImage()">&#10095;</button>
+            <!-- Kropki nawigacyjne -->
+            <div id="gallery-dots" class="gallery-dots"></div>
+        </div>
     </div>
 
     <!-- Skrypty JavaScript -->
     <script>
+        let currentImages = [];
+        let currentImageIndex = 0;
+        
         // Funkcja do otwierania modalu
-        function openModal(imageElement) {
+        function openModal(images) {
             const modal = document.getElementById('imageModal');
-            const modalImage = document.getElementById('modalImage');
+            const galleryTrack = document.getElementById('gallery-track');
+            const galleryDots = document.getElementById('gallery-dots');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+
+            // Oczyszczenie starej zawartości i przygotowanie na nowe obrazy
+            galleryTrack.innerHTML = '';
+            galleryDots.innerHTML = '';
+            currentImages = images;
+            currentImageIndex = 0;
             
+            // Tworzenie elementów obrazów i dodawanie ich do kontenera
+            currentImages.forEach(src => {
+                const imgWrapper = document.createElement('div');
+                imgWrapper.className = 'gallery-image-wrapper';
+                const img = document.createElement('img');
+                img.src = src;
+                img.alt = "Powiększone zdjęcie kurczaka";
+                img.className = 'gallery-image';
+                imgWrapper.appendChild(img);
+                galleryTrack.appendChild(imgWrapper);
+            });
+            
+            // Ustawienie szerokości kontenera na wszystkie obrazy
+            galleryTrack.style.width = `${currentImages.length * 100}%`;
+            galleryTrack.style.transform = `translateX(0)`; // Reset position
+
+            // Tworzenie kropek nawigacyjnych
+            if (currentImages.length > 1) {
+                for (let i = 0; i < currentImages.length; i++) {
+                    const dot = document.createElement('span');
+                    dot.className = 'dot';
+                    dot.onclick = () => goToImage(i);
+                    galleryDots.appendChild(dot);
+                }
+                updateDots();
+                prevBtn.style.display = 'block';
+                nextBtn.style.display = 'block';
+            } else {
+                prevBtn.style.display = 'none';
+                nextBtn.style.display = 'none';
+            }
+            
+            // Wyświetlenie modalu
             modal.style.display = 'flex';
-            modalImage.src = imageElement.src;
+            setTimeout(() => modal.classList.add('show'), 10);
         }
 
         // Funkcja do zamykania modalu
         function closeModal() {
             const modal = document.getElementById('imageModal');
-            modal.style.display = 'none';
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+                document.getElementById('gallery-track').innerHTML = '';
+                document.getElementById('gallery-dots').innerHTML = '';
+            }, 300); // Czas musi być zgodny z transition w CSS
         }
 
         // Zamykanie modalu po kliknięciu poza zdjęciem
@@ -186,31 +316,63 @@
             }
         }
 
+        // Aktualizacja stanu kropek
+        function updateDots() {
+            const dots = document.querySelectorAll('.dot');
+            dots.forEach((dot, index) => {
+                dot.classList.remove('active');
+                if (index === currentImageIndex) {
+                    dot.classList.add('active');
+                }
+            });
+        }
+
+        // Funkcja do przechodzenia do konkretnego obrazu
+        function goToImage(index) {
+            currentImageIndex = index;
+            const galleryTrack = document.getElementById('gallery-track');
+            galleryTrack.style.transform = `translateX(-${currentImageIndex * 100}%)`;
+            updateDots();
+        }
+
+        // Funkcja do przechodzenia do poprzedniego obrazu z animacją
+        function prevImage() {
+            currentImageIndex = (currentImageIndex - 1 + currentImages.length) % currentImages.length;
+            goToImage(currentImageIndex);
+        }
+
+        // Funkcja do przechodzenia do następnego obrazu z animacją
+        function nextImage() {
+            currentImageIndex = (currentImageIndex + 1) % currentImages.length;
+            goToImage(currentImageIndex);
+        }
+
+
         // Dane o kurach i kogutach - teraz przechowywane w JS
         const allChickens = [
-            { name: "Kogut Lucjan", species: "Rosa Jarzębata", dob: "1 Lipiec 2024", ringNumber: "000", image: "https://placehold.co/150x150/e2e8f0/000000?text=Lucjan" },
-            { name: "Kogut Henio", species: "Czarny typ włoszka Kogut", dob: "24 Czerwiec 2025", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Henio" },
-            { name: "Mariolcia", species: "Liliputki Polskie", dob: "Czerwiec/Lipiec 2025", ringNumber: "Nieznane", image: "files/Mariolka.png" },
-            { name: "Gabrysia", species: "Liliputki Polskie", dob: "Czerwiec/Lipiec 2025", ringNumber: "Nieznane", image: "files/Gabrysia.png" },
-            { name: "Kogut Benio", species: "Liliputki Polskie", dob: "Czerwiec/Lipiec 2025", ringNumber: "Nieznane", image: "files/Beniek.png" },
-            { name: "Edzia", species: "Rosa Karmazyn z Zielonymi nóżkami", dob: "24 Czerwiec 2025", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Edzia" },
-            { name: "Kogut Albert", species: "Perliczki", dob: "Maj/Czerwiec 2025", ringNumber: "Nieznane", image: "files/Perliczka.png" },
-            { name: "Miecia", species: "Perliczki", dob: "Maj/Czerwiec 2025", ringNumber: "Nieznane", image: "files/PerliczkiPhoto.png" },
-            { name: "Melania", species: "Perliczki", dob: "Maj/Czerwiec 2025", ringNumber: "Nieznane", image: "files/PerliczkiPhoto.png" },
-            { name: "Halińcia", species: "Rosa Lawendowa", dob: "1 Lipiec 2024", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Halincia" },
-            { name: "Tereska", species: "Zielononóżka Kuropatwiana", dob: "1 Lipiec 2024", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Tereska" },
-            { name: "Danuta", species: "Rosa Bląd z zielonymi nóżkami", dob: "1 Lipiec 2024", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Danuta" },
-            { name: "Tekla", species: "Czerwona Rosa", dob: "Kwiecień 2023", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Tekla" },
-            { name: "Czesia", species: "Rosa Czerwona", dob: "ok. Marzec 2021", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Czesia" },
-            { name: "Fredzia", species: "Rosa Czerwona", dob: "Marzec 2020", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Fredzia" },
-            { name: "Jadzia", species: "Lenhorn", dob: "Nieznane (ok. 2016/2017)", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Jadzia" },
-            { name: "Celina", species: "Rosa Czerwona", dob: "Marzec 2020", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Celina" },
+            { name: "Kogut Lucjan", species: "Rosa Jarzębata", dob: "1 Lipiec 2024", ringNumber: "000", images: ["https://placehold.co/300x300/e2e8f0/000000?text=Lucjan"] },
+            { name: "Kogut Henio", species: "Czarny typ włoszka Kogut", dob: "24 Czerwiec 2025", ringNumber: "Nieznane", images: ["https://placehold.co/300x300/e2e8f0/000000?text=Henio"] },
+            { name: "Mariolcia", species: "Liliputki Polskie", dob: "Czerwiec/Lipiec 2025", ringNumber: "Nieznane", images: ["files/Mariolka.png", "https://placehold.co/300x300/e2e8f0/000000?text=Mariolcia wkrotce2"] },
+            { name: "Gabrysia", species: "Liliputki Polskie", dob: "Czerwiec/Lipiec 2025", ringNumber: "Nieznane", images: ["files/Gabrysia.png"] },
+            { name: "Kogut Benio", species: "Liliputki Polskie", dob: "Czerwiec/Lipiec 2025", ringNumber: "Nieznane", images: ["files/Beniek.png"] },
+            { name: "Edzia", species: "Rosa Karmazyn z Zielonymi nóżkami", dob: "24 Czerwiec 2025", ringNumber: "Nieznane", images: ["https://placehold.co/300x300/e2e8f0/000000?text=Edzia"] },
+            { name: "Kogut Albert", species: "Perliczki", dob: "Maj/Czerwiec 2025", ringNumber: "Nieznane", images: ["files/Perliczka.png", "files/PerliczkiPhoto.png"] },
+            { name: "Miecia", species: "Perliczki", dob: "Maj/Czerwiec 2025", ringNumber: "Nieznane", images: ["files/Perliczka.png", "files/PerliczkiPhoto.png"] },
+            { name: "Melania", species: "Perliczki", dob: "Maj/Czerwiec 2025", ringNumber: "Nieznane", images: ["files/Perliczka.png", "files/PerliczkiPhoto.png"] },
+            { name: "Halińcia", species: "Rosa Lawendowa", dob: "1 Lipiec 2024", ringNumber: "Nieznane", images: ["https://placehold.co/300x300/e2e8f0/000000?text=Halincia"] },
+            { name: "Tereska", species: "Zielononóżka Kuropatwiana", dob: "1 Lipiec 2024", ringNumber: "Nieznane", images: ["https://placehold.co/300x300/e2e8f0/000000?text=Tereska"] },
+            { name: "Danuta", species: "Rosa Bląd z zielonymi nóżkami", dob: "1 Lipiec 2024", ringNumber: "Nieznane", images: ["https://placehold.co/300x300/e2e8f0/000000?text=Danuta"] },
+            { name: "Tekla", species: "Czerwona Rosa", dob: "Kwiecień 2023", ringNumber: "Nieznane", images: ["https://placehold.co/300x300/e2e8f0/000000?text=Tekla"] },
+            { name: "Czesia", species: "Rosa Czerwona", dob: "ok. Marzec 2021", ringNumber: "Nieznane", images: ["https://placehold.co/300x300/e2e8f0/000000?text=Czesia"] },
+            { name: "Fredzia", species: "Rosa Czerwona", dob: "Marzec 2020", ringNumber: "Nieznane", images: ["https://placehold.co/300x300/e2e8f0/000000?text=Fredzia+1"] },
+            { name: "Jadzia", species: "Lenhorn", dob: "Nieznane (ok. 2016/2017)", ringNumber: "Nieznane", images: ["https://placehold.co/300x300/e2e8f0/000000?text=Jadzia"] },
+            { name: "Celina", species: "Rosa Czerwona", dob: "Marzec 2020", ringNumber: "Nieznane", images: ["https://placehold.co/300x300/e2e8f0/000000?text=Celina"] },
         ];
 
         // Dane o kurach, które odeszły
         const deceasedChickens = [
-            { name: "Nieznany Kogut", species: "Nieznane", dob: "Nieznane", dateOfDeath: "Nieznane", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Przykład" },
-            { name: "Nieznany kura", species: "Nieznane", dob: "Nieznane", dateOfDeath: "Nieznane", ringNumber: "Nieznane", image: "https://placehold.co/150x150/e2e8f0/000000?text=Przykład" }
+            { name: "Nieznany Kogut", species: "Nieznane", dob: "Nieznane", dateOfDeath: "Nieznane", ringNumber: "Nieznane", images: ["https://placehold.co/300x300/e2e8f0/000000?text=Przykład+1"] },
+            { name: "Nieznany kura", species: "Nieznane", dob: "Nieznane", dateOfDeath: "Nieznane", ringNumber: "Nieznane", images: ["https://placehold.co/300x300/e2e8f0/000000?text=Przykład+2"] }
         ];
         
         // Tablica do mapowania polskich nazw miesięcy na liczby
@@ -261,10 +423,10 @@
             // Handle date with month range (e.g., "Maj/Czerwiec 2025")
             let monthRangeParts = dateStr.split("/");
             if (monthRangeParts.length >= 2) {
-                let firstMonth = monthMap[monthRangeParts[0]];
+                let firstMonth = monthRangeParts[0];
                 let year = parseInt(monthRangeParts[1].split(" ")[1]);
-                if (firstMonth !== undefined && !isNaN(year)) {
-                    return new Date(year, firstMonth, 1);
+                if (monthMap[firstMonth] !== undefined && !isNaN(year)) {
+                    return new Date(year, monthMap[firstMonth], 1);
                 }
             }
             
@@ -310,7 +472,7 @@
 
                 card.innerHTML = `
                     <div class="image-wrapper">
-                        <img src="${chicken.image}" alt="${chicken.name}" onclick="openModal(this)">
+                        <img src="${chicken.images[0]}" alt="${chicken.name}" onclick='openModal(${JSON.stringify(chicken.images)})' onerror="this.onerror=null; this.src='https://placehold.co/150x150/e2e8f0/000000?text=Brak+zdjęcia';">
                     </div>
                     <h3 class="text-2xl font-semibold text-gray-900">${chicken.name}</h3>
                     <p class="text-gray-600 mt-1">
@@ -369,7 +531,7 @@
             // Function to add footer to a page
             const addFooter = (pageNumber) => {
                 doc.setFontSize(10);
-                doc.text(`Generator PDF opracowany przez — O5K4R_ TECHNOLOGIC | Strona nr. ${pageNumber}`, pdfWidth - margin, pdfHeight - margin - 2, { align: 'right' });
+                doc.text(`Generator PDF opracowany przez — O5K4R_ TECHNOLOG | Strona nr. ${pageNumber}`, pdfWidth - margin, pdfHeight - margin - 2, { align: 'right' });
             };
 
             // Loop through the cards and generate pages
@@ -454,7 +616,3 @@
     </script>
 </body>
 </html>
-
-
-
-

@@ -81,7 +81,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden; /* Dodane aby przyciąć obraz poza widokiem */
+            overflow: hidden;
         }
         .gallery-track {
             display: flex;
@@ -101,6 +101,11 @@
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
+            cursor: grab;
+            transition: transform 0.3s ease-out;
+        }
+        .gallery-image.grabbing {
+            cursor: grabbing;
         }
         .close-button {
             position: absolute;
@@ -179,6 +184,26 @@
         .dot.active {
             background-color: white;
         }
+        /* Styl dla komunikatu */
+        #notification-box {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            z-index: 1001;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            text-align: center;
+        }
+        #notification-box.show {
+            display: block;
+            opacity: 1;
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-4 sm:p-8">
@@ -239,13 +264,143 @@
             <!-- Kropki nawigacyjne -->
             <div id="gallery-dots" class="gallery-dots"></div>
         </div>
+        <!-- Komunikat informacyjny -->
+        <div id="notification-box">
+            <span>Przewiń, aby powiększyć/pomniejszyć. Przytrzymaj i przeciągnij, aby przesunąć.</span>
+        </div>
     </div>
 
     <!-- Skrypty JavaScript -->
     <script>
+        // Global variables for the gallery and its state
         let currentImages = [];
         let currentImageIndex = 0;
-        
+        let zoomLevel = 1;
+        let panX = 0;
+        let panY = 0;
+        let isDragging = false;
+        let lastPanX = 0;
+        let lastPanY = 0;
+
+        /**
+         * Applies the current zoom and pan transformation to the active image.
+         */
+        function applyTransform() {
+            const currentImage = document.querySelector('#gallery-track .gallery-image-wrapper:nth-child(' + (currentImageIndex + 1) + ') .gallery-image');
+            if (currentImage) {
+                currentImage.style.transform = `scale(${zoomLevel}) translate(${panX}px, ${panY}px)`;
+            }
+        }
+
+        /**
+         * Resets the zoom and pan state to default.
+         */
+        function resetTransform() {
+            zoomLevel = 1;
+            panX = 0;
+            panY = 0;
+            applyTransform();
+        }
+
+        /**
+         * Handles mouse down event for dragging.
+         * @param {MouseEvent} e The mouse event object.
+         */
+        function handleMouseDown(e) {
+            if (zoomLevel > 1) { // Only allow dragging when zoomed in
+                e.preventDefault();
+                isDragging = true;
+                lastPanX = e.clientX;
+                lastPanY = e.clientY;
+                const currentImage = document.querySelector('#gallery-track .gallery-image-wrapper:nth-child(' + (currentImageIndex + 1) + ') .gallery-image');
+                if (currentImage) currentImage.classList.add('grabbing');
+            }
+        }
+
+        /**
+         * Handles mouse move event for dragging.
+         * @param {MouseEvent} e The mouse event object.
+         */
+        function handleMouseMove(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            const dx = e.clientX - lastPanX;
+            const dy = e.clientY - lastPanY;
+            panX += dx / zoomLevel;
+            panY += dy / zoomLevel;
+            lastPanX = e.clientX;
+            lastPanY = e.clientY;
+            applyTransform();
+        }
+
+        /**
+         * Handles mouse up event to stop dragging.
+         */
+        function handleMouseUp() {
+            isDragging = false;
+            const currentImage = document.querySelector('#gallery-track .gallery-image-wrapper:nth-child(' + (currentImageIndex + 1) + ') .gallery-image');
+            if (currentImage) currentImage.classList.remove('grabbing');
+        }
+
+        /**
+         * Handles mouse wheel event for zooming.
+         * @param {WheelEvent} e The wheel event object.
+         */
+        function handleWheel(e) {
+            e.preventDefault();
+            const zoomSpeed = 0.1;
+            const newZoom = zoomLevel + (e.deltaY > 0 ? -zoomSpeed : zoomSpeed);
+            zoomLevel = Math.min(Math.max(1, newZoom), 5); // Limit zoom to 1x and 5x
+            applyTransform();
+        }
+
+        /**
+         * Handles touch start event for dragging (mobile).
+         * @param {TouchEvent} e The touch event object.
+         */
+        function handleTouchStart(e) {
+            if (e.touches.length === 1 && zoomLevel > 1) {
+                isDragging = true;
+                lastPanX = e.touches[0].clientX;
+                lastPanY = e.touches[0].clientY;
+            }
+        }
+
+        /**
+         * Handles touch move event for dragging (mobile).
+         * @param {TouchEvent} e The touch event object.
+         */
+        function handleTouchMove(e) {
+            if (!isDragging || e.touches.length !== 1) return;
+            const dx = e.touches[0].clientX - lastPanX;
+            const dy = e.touches[0].clientY - lastPanY;
+            panX += dx / zoomLevel;
+            panY += dy / zoomLevel;
+            lastPanX = e.touches[0].clientX;
+            lastPanY = e.touches[0].clientY;
+            applyTransform();
+        }
+
+        /**
+         * Handles touch end event to stop dragging (mobile).
+         */
+        function handleTouchEnd() {
+            isDragging = false;
+        }
+
+        /**
+         * Displays a notification message.
+         */
+        function showNotification() {
+            const notificationBox = document.getElementById('notification-box');
+            notificationBox.classList.add('show');
+            setTimeout(() => {
+                notificationBox.classList.remove('show');
+            }, 5000); // Hide after 5 seconds
+        }
+
+        // --- Gallery functions ---
+
         // Funkcja do otwierania modalu
         function openModal(images) {
             const modal = document.getElementById('imageModal');
@@ -254,29 +409,28 @@
             const prevBtn = document.getElementById('prev-btn');
             const nextBtn = document.getElementById('next-btn');
 
-            // Oczyszczenie starej zawartości i przygotowanie na nowe obrazy
             galleryTrack.innerHTML = '';
             galleryDots.innerHTML = '';
             currentImages = images;
             currentImageIndex = 0;
             
-            // Tworzenie elementów obrazów i dodawanie ich do kontenera
-            currentImages.forEach(src => {
+            currentImages.forEach((src, index) => {
                 const imgWrapper = document.createElement('div');
                 imgWrapper.className = 'gallery-image-wrapper';
                 const img = document.createElement('img');
                 img.src = src;
                 img.alt = "Powiększone zdjęcie kurczaka";
                 img.className = 'gallery-image';
+                img.onerror = () => {
+                    img.src = 'https://placehold.co/150x150/e2e8f0/000000?text=Brak+zdjęcia';
+                };
                 imgWrapper.appendChild(img);
                 galleryTrack.appendChild(imgWrapper);
             });
             
-            // Ustawienie szerokości kontenera na wszystkie obrazy
             galleryTrack.style.width = `${currentImages.length * 100}%`;
             galleryTrack.style.transform = `translateX(0)`; // Reset position
 
-            // Tworzenie kropek nawigacyjnych
             if (currentImages.length > 1) {
                 for (let i = 0; i < currentImages.length; i++) {
                     const dot = document.createElement('span');
@@ -292,9 +446,25 @@
                 nextBtn.style.display = 'none';
             }
             
-            // Wyświetlenie modalu
             modal.style.display = 'flex';
             setTimeout(() => modal.classList.add('show'), 10);
+            
+            // Add event listeners for zoom and pan
+            const currentImage = document.querySelector('#gallery-track .gallery-image-wrapper:nth-child(1) .gallery-image');
+            if (currentImage) {
+                currentImage.addEventListener('wheel', handleWheel);
+                currentImage.addEventListener('mousedown', handleMouseDown);
+                currentImage.addEventListener('mousemove', handleMouseMove);
+                currentImage.addEventListener('mouseup', handleMouseUp);
+                currentImage.addEventListener('mouseleave', handleMouseUp); // Stop dragging if mouse leaves image
+                // Mobile support
+                currentImage.addEventListener('touchstart', handleTouchStart);
+                currentImage.addEventListener('touchmove', handleTouchMove);
+                currentImage.addEventListener('touchend', handleTouchEnd);
+            }
+
+            // Show instruction notification
+            showNotification();
         }
 
         // Funkcja do zamykania modalu
@@ -305,7 +475,22 @@
                 modal.style.display = 'none';
                 document.getElementById('gallery-track').innerHTML = '';
                 document.getElementById('gallery-dots').innerHTML = '';
-            }, 300); // Czas musi być zgodny z transition w CSS
+            }, 300);
+
+            // Remove event listeners to prevent memory leaks
+            const currentImage = document.querySelector('.gallery-image');
+            if (currentImage) {
+                currentImage.removeEventListener('wheel', handleWheel);
+                currentImage.removeEventListener('mousedown', handleMouseDown);
+                currentImage.removeEventListener('mousemove', handleMouseMove);
+                currentImage.removeEventListener('mouseup', handleMouseUp);
+                currentImage.removeEventListener('mouseleave', handleMouseUp);
+                currentImage.removeEventListener('touchstart', handleTouchStart);
+                currentImage.removeEventListener('touchmove', handleTouchMove);
+                currentImage.removeEventListener('touchend', handleTouchEnd);
+            }
+            // Reset zoom and pan for next time
+            resetTransform();
         }
 
         // Zamykanie modalu po kliknięciu poza zdjęciem
@@ -333,6 +518,7 @@
             const galleryTrack = document.getElementById('gallery-track');
             galleryTrack.style.transform = `translateX(-${currentImageIndex * 100}%)`;
             updateDots();
+            resetTransform(); // Reset zoom and pan for the new image
         }
 
         // Funkcja do przechodzenia do poprzedniego obrazu z animacją
@@ -346,7 +532,6 @@
             currentImageIndex = (currentImageIndex + 1) % currentImages.length;
             goToImage(currentImageIndex);
         }
-
 
         // Dane o kurach i kogutach - teraz przechowywane w JS
         const allChickens = [
@@ -392,7 +577,7 @@
          * @returns {Date} A Date object representing the date.
          */
         function parseDate(dateStr) {
-            // Check for unknown date, return a very old date to put it at the end
+            // Check for unknown date, return a very early date to put it at the end
             if (dateStr.includes("Nieznane")) {
                 return new Date(0); // A very early timestamp
             }
@@ -616,3 +801,4 @@
     </script>
 </body>
 </html>
+

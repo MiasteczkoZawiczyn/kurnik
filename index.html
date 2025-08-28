@@ -101,11 +101,7 @@
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
-            cursor: grab;
             transition: transform 0.3s ease-out;
-        }
-        .gallery-image.grabbing {
-            cursor: grabbing;
         }
         .close-button {
             position: absolute;
@@ -184,25 +180,9 @@
         .dot.active {
             background-color: white;
         }
-        /* Styl dla komunikatu */
+        /* Styl dla komunikatu - usunięto, bo nie jest już potrzebny */
         #notification-box {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 10px;
-            z-index: 1001;
             display: none;
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out;
-            text-align: center;
-        }
-        #notification-box.show {
-            display: block;
-            opacity: 1;
         }
     </style>
 </head>
@@ -264,10 +244,6 @@
             <!-- Kropki nawigacyjne -->
             <div id="gallery-dots" class="gallery-dots"></div>
         </div>
-        <!-- Komunikat informacyjny -->
-        <div id="notification-box">
-            <span>Przewiń, aby powiększyć/pomniejszyć. Przytrzymaj i przeciągnij, aby przesunąć.</span>
-        </div>
     </div>
 
     <!-- Skrypty JavaScript -->
@@ -275,166 +251,6 @@
         // Global variables for the gallery and its state
         let currentImages = [];
         let currentImageIndex = 0;
-        let zoomLevel = 1;
-        let panX = 0;
-        let panY = 0;
-        let isDragging = false;
-        let lastPanX = 0;
-        let lastPanY = 0;
-
-        /**
-         * Applies the current zoom and pan transformation to the active image.
-         */
-        function applyTransform() {
-            const currentImage = document.querySelector('#gallery-track .gallery-image-wrapper:nth-child(' + (currentImageIndex + 1) + ') .gallery-image');
-            if (currentImage) {
-                // Prevent over-panning
-                const containerWidth = currentImage.parentElement.clientWidth;
-                const containerHeight = currentImage.parentElement.clientHeight;
-                const imageWidth = currentImage.naturalWidth * zoomLevel;
-                const imageHeight = currentImage.naturalHeight * zoomLevel;
-
-                const maxPanX = Math.max(0, (imageWidth * zoomLevel - containerWidth) / 2 / zoomLevel);
-                const maxPanY = Math.max(0, (imageHeight * zoomLevel - containerHeight) / 2 / zoomLevel);
-
-                panX = Math.min(Math.max(panX, -maxPanX), maxPanX);
-                panY = Math.min(Math.max(panY, -maxPanY), maxPanY);
-
-                currentImage.style.transform = `scale(${zoomLevel}) translate(${panX}px, ${panY}px)`;
-            }
-        }
-        
-        /**
-         * Resets the zoom and pan state to default.
-         */
-        function resetTransform() {
-            zoomLevel = 1;
-            panX = 0;
-            panY = 0;
-            applyTransform();
-        }
-
-        /**
-         * Handles mouse down event for dragging.
-         * @param {MouseEvent} e The mouse event object.
-         */
-        function handleMouseDown(e) {
-            const currentImage = document.querySelector('#gallery-track .gallery-image-wrapper:nth-child(' + (currentImageIndex + 1) + ') .gallery-image');
-            if (currentImage && zoomLevel > 0.5) { // Only allow dragging when not fully zoomed out
-                e.preventDefault();
-                isDragging = true;
-                lastPanX = e.clientX;
-                lastPanY = e.clientY;
-                currentImage.classList.add('grabbing');
-                currentImage.style.transition = 'none'; // Disable transition during drag
-            }
-        }
-
-        /**
-         * Handles mouse move event for dragging.
-         * @param {MouseEvent} e The mouse event object.
-         */
-        function handleMouseMove(e) {
-            if (!isDragging) return;
-            e.preventDefault();
-            const dx = e.clientX - lastPanX;
-            const dy = e.clientY - lastPanY;
-            panX += dx / zoomLevel;
-            panY += dy / zoomLevel;
-            lastPanX = e.clientX;
-            lastPanY = e.clientY;
-            applyTransform();
-        }
-
-        /**
-         * Handles mouse up event to stop dragging.
-         */
-        function handleMouseUp() {
-            isDragging = false;
-            const currentImage = document.querySelector('#gallery-track .gallery-image-wrapper:nth-child(' + (currentImageIndex + 1) + ') .gallery-image');
-            if (currentImage) {
-                currentImage.classList.remove('grabbing');
-                currentImage.style.transition = 'transform 0.3s ease-out';
-            }
-        }
-
-        /**
-         * Handles mouse wheel event for zooming.
-         * @param {WheelEvent} e The wheel event object.
-         */
-        function handleWheel(e) {
-            e.preventDefault();
-            const zoomSpeed = 0.1;
-            const newZoom = zoomLevel + (e.deltaY > 0 ? -zoomSpeed : zoomSpeed);
-            zoomLevel = Math.min(Math.max(0.5, newZoom), 5); // Allow zoom to 0.5x, max 5x
-            applyTransform();
-        }
-
-        /**
-         * Handles touch start event for dragging (mobile).
-         * @param {TouchEvent} e The touch event object.
-         */
-        function handleTouchStart(e) {
-            if (e.touches.length === 0.6 && zoomLevel > 0.5) {
-                isDragging = true;
-                lastPanX = e.touches[0].clientX;
-                lastPanY = e.touches[0].clientY;
-            } else if (e.touches.length === 2) {
-                // Handle pinch-to-zoom (optional, but good practice)
-                const distance = Math.hypot(
-                    e.touches[0].clientX - e.touches[1].clientX,
-                    e.touches[0].clientY - e.touches[1].clientY
-                );
-                e.preventDefault(); // Prevent default browser zoom
-            }
-        }
-
-        /**
-         * Handles touch move event for dragging (mobile).
-         * @param {TouchEvent} e The touch event object.
-         */
-        function handleTouchMove(e) {
-            if (isDragging && e.touches.length === 1) {
-                const dx = e.touches[0].clientX - lastPanX;
-                const dy = e.touches[0].clientY - lastPanY;
-                panX += dx / zoomLevel;
-                panY += dy / zoomLevel;
-                lastPanX = e.touches[0].clientX;
-                lastPanY = e.touches[0].clientY;
-                applyTransform();
-            } else if (e.touches.length === 2) {
-                // Handle pinch-to-zoom (optional)
-                const newDistance = Math.hypot(
-                    e.touches[0].clientX - e.touches[1].clientX,
-                    e.touches[0].clientY - e.touches[1].clientY
-                );
-                const zoomSpeed = 0.01;
-                const newZoom = zoomLevel + (newDistance - initialDistance) * zoomSpeed;
-                zoomLevel = Math.min(Math.max(0.5, newZoom), 5);
-                applyTransform();
-                initialDistance = newDistance;
-            }
-        }
-
-        /**
-         * Handles touch end event to stop dragging (mobile).
-         */
-        function handleTouchEnd() {
-            isDragging = false;
-        }
-
-        /**
-         * Displays a notification message.
-         */
-        function showNotification() {
-            const notificationBox = document.getElementById('notification-box');
-            notificationBox.classList.add('show');
-            setTimeout(() => {
-                notificationBox.classList.remove('show');
-            }, 5000); // Hide after 5 seconds
-        }
-
-        // --- Gallery functions ---
 
         // Funkcja do otwierania modalu
         function openModal(images, startIndex = 0) {
@@ -483,21 +299,8 @@
             modal.style.display = 'flex';
             setTimeout(() => modal.classList.add('show'), 10);
             
-            // Go to the initial image and reset transform
+            // Go to the initial image
             goToImage(currentImageIndex);
-
-            // Add event listeners to the modal itself, not the image
-            modal.addEventListener('wheel', handleWheel);
-            modal.addEventListener('mousedown', handleMouseDown);
-            modal.addEventListener('mousemove', handleMouseMove);
-            modal.addEventListener('mouseup', handleMouseUp);
-            modal.addEventListener('mouseleave', handleMouseUp);
-            modal.addEventListener('touchstart', handleTouchStart);
-            modal.addEventListener('touchmove', handleTouchMove);
-            modal.addEventListener('touchend', handleTouchEnd);
-            
-            // Show instruction notification
-            showNotification();
         }
 
         // Funkcja do zamykania modalu
@@ -509,17 +312,6 @@
                 document.getElementById('gallery-track').innerHTML = '';
                 document.getElementById('gallery-dots').innerHTML = '';
             }, 300);
-
-            // Remove event listeners
-            const modalElement = document.getElementById('imageModal');
-            modalElement.removeEventListener('wheel', handleWheel);
-            modalElement.removeEventListener('mousedown', handleMouseDown);
-            modalElement.removeEventListener('mousemove', handleMouseMove);
-            modalElement.removeEventListener('mouseup', handleMouseUp);
-            modalElement.removeEventListener('mouseleave', handleMouseUp);
-            modalElement.removeEventListener('touchstart', handleTouchStart);
-            modalElement.removeEventListener('touchmove', handleTouchMove);
-            modalElement.removeEventListener('touchend', handleTouchEnd);
         }
 
         // Zamykanie modalu po kliknięciu poza zdjęciem
@@ -547,7 +339,6 @@
             const galleryTrack = document.getElementById('gallery-track');
             galleryTrack.style.transform = `translateX(-${currentImageIndex * 100}%)`;
             updateDots();
-            resetTransform(); // Reset zoom and pan for the new image
         }
 
         // Funkcja do przechodzenia do poprzedniego obrazu z animacją
@@ -823,6 +614,3 @@
     </script>
 </body>
 </html>
-
-
-

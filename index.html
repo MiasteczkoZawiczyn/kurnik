@@ -36,25 +36,32 @@
         .image-gallery-container {
             position: relative;
             height: 300px; /* Fixed height for image gallery */
-            overflow: hidden;
+            overflow-x: auto;
+            overflow-y: hidden;
             border-radius: 8px;
+            white-space: nowrap; /* Prevent line breaks */
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            scrollbar-width: none; /* Firefox */
+        }
+        .image-gallery-container::-webkit-scrollbar {
+            display: none; /* Chrome, Safari */
         }
         .image-gallery-track {
-            display: flex;
+            display: inline-flex;
             height: 100%;
-            transition: transform 0.5s ease-in-out;
+            gap: 16px; /* Space between images */
+            padding: 8px 0;
         }
         .gallery-image-wrapper {
             flex-shrink: 0;
-            width: 100%;
             height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
         }
         .gallery-image {
-            max-width: 100%;
-            max-height: 100%;
+            height: 100%;
+            width: auto;
             object-fit: contain;
             border-radius: 8px;
             cursor: pointer;
@@ -182,8 +189,6 @@
         <div id="chicken-details" class="flex flex-col md:flex-row md:items-start gap-8">
             <div id="image-container" class="w-full md:w-1/2 image-gallery-container flex-shrink-0">
                 <div id="image-gallery-track" class="image-gallery-track"></div>
-                <button id="prev-btn" class="gallery-arrow left" onclick="prevImage()">&#10094;</button>
-                <button id="next-btn" class="gallery-arrow right" onclick="nextImage()">&#10095;</button>
             </div>
             
             <div class="w-full md:w-1/2">
@@ -326,35 +331,17 @@
                 imgWrapper.appendChild(img);
                 galleryTrack.appendChild(imgWrapper);
             });
-
-            // Ustawianie wymiarów galerii i pozycji początkowej
-            galleryTrack.style.width = `${currentImages.length * 100}%`;
-            galleryTrack.style.transform = `translateX(0%)`;
-
+            
             // Obsługa widoczności przycisków nawigacyjnych
             const prevBtn = document.getElementById('prev-btn');
             const nextBtn = document.getElementById('next-btn');
-            if (currentImages.length <= 1) {
-                prevBtn.classList.add('hidden');
-                nextBtn.classList.add('hidden');
-            } else {
+            if (currentImages.length > 1) {
                 prevBtn.classList.remove('hidden');
                 nextBtn.classList.remove('hidden');
+            } else {
+                prevBtn.classList.add('hidden');
+                nextBtn.classList.add('hidden');
             }
-        }
-
-        // Funkcja do przesuwania obrazka w małej galerii
-        function nextImage() {
-            currentImageIndex = (currentImageIndex + 1) % currentImages.length;
-            const galleryTrack = document.getElementById('image-gallery-track');
-            galleryTrack.style.transform = `translateX(-${currentImageIndex * 100}%)`;
-        }
-
-        // Funkcja do przesuwania obrazka w małej galerii
-        function prevImage() {
-            currentImageIndex = (currentImageIndex - 1 + currentImages.length) % currentImages.length;
-            const galleryTrack = document.getElementById('image-gallery-track');
-            galleryTrack.style.transform = `translateX(-${currentImageIndex * 100}%)`;
         }
 
         // --- Funkcje modala galerii pełnoekranowej ---
@@ -450,5 +437,6 @@
     </script>
 </body>
 </html>
+
 
 

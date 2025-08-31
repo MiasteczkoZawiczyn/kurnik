@@ -148,6 +148,24 @@
             background-color: rgba(255, 255, 255, 0.4);
             transform: scale(1.05);
         }
+        .filter-btn, .sort-btn {
+            padding: 8px 16px;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #d1d5db;
+        }
+        .filter-btn:hover, .sort-btn:hover {
+            background-color: #f9f2e6;
+            border-color: #ffc107;
+        }
+        .filter-btn.active, .sort-btn.active {
+            background-color: #ffc107;
+            color: #4a4a4a;
+            border-color: #ffc107;
+        }
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -159,7 +177,7 @@
     <!-- Nagłówek -->
     <header class="w-full text-center py-8">
         <h1 class="text-4xl font-bold text-gray-800">Kurnik 🐔</h1>
-        <p class="text-xl text-gray-600 mt-2">by: 05K4R Solutions</p>
+        <p class="text-xl text-gray-600 mt-2">by: <b>O5K4R Solutions</b></p>
     </header>
 
     <!-- Widok główny z listą -->
@@ -176,6 +194,24 @@
         </div>
         <input type="text" id="search-input" placeholder="Wyszukaj po imieniu..." class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#ffc107] mb-6">
         
+        <!-- Sekcja filtrów -->
+        <div id="filter-section" class="mb-6">
+            <h3 class="font-semibold text-gray-700 mb-2">Filtruj wg gatunku:</h3>
+            <div id="species-filters" class="flex flex-wrap gap-2">
+                <!-- Filtry będą generowane dynamicznie przez JS -->
+            </div>
+        </div>
+        
+        <!-- Sekcja sortowania -->
+        <div id="sort-section" class="mb-6">
+            <h3 class="font-semibold text-gray-700 mb-2">Sortuj:</h3>
+            <div id="sort-buttons" class="flex flex-wrap gap-2">
+                <button class="sort-btn active" data-sort="name">Po imieniu</button>
+                <button class="sort-btn" data-sort="dob">Po dacie urodzenia</button>
+                <button class="sort-btn" data-sort="ring">Po numerze obrączki</button>
+            </div>
+        </div>
+
         <!-- Sekcje dla kogutów, kur i zmarłych -->
         <div id="chicken-list-container" class="space-y-6">
             <!-- Tutaj zostaną wyrenderowane listy przez JavaScript -->
@@ -254,19 +290,27 @@
         // Globalny stan
         let currentImageIndex = 0;
         let currentImages = [];
-        
+        let currentFilteredBirds = [];
+        let currentSortOrder = "name";
+        let currentFilter = "all";
+
         // Sortowanie ptaków
         const allBirds = [...allChickens, ...deceasedChickens.map(bird => ({ ...bird, deceased: true }))];
         const roosters = allBirds.filter(bird => bird.name.startsWith("Kogut") && !bird.deceased);
-        const hens = allBirds.filter(bird => !bird.name.startsWith("Kogut") && !bird.deceased).sort((a, b) => a.name.localeCompare(b.name));
+        const hens = allBirds.filter(bird => !bird.name.startsWith("Kogut") && !bird.deceased);
         const deceased = allBirds.filter(bird => bird.deceased);
-        const sortedBirds = [...roosters, ...hens, ...deceased];
+        const allActiveBirds = [...roosters, ...hens];
 
         // Funkcja do renderowania listy ptaków
-        function renderList() {
+        function renderList(birdsToRender = currentFilteredBirds) {
             const listContainer = document.getElementById('chicken-list-container');
             listContainer.innerHTML = '';
             
+            // Grupowanie ptaków po płci
+            const roostersToRender = birdsToRender.filter(bird => bird.name.startsWith("Kogut") && !bird.deceased);
+            const hensToRender = birdsToRender.filter(bird => !bird.name.startsWith("Kogut") && !bird.deceased);
+            const deceasedToRender = birdsToRender.filter(bird => bird.deceased);
+
             const renderSection = (title, birds) => {
                 if (birds.length > 0) {
                     const sectionDiv = document.createElement('div');
@@ -274,10 +318,10 @@
                     const ul = document.createElement('ul');
                     ul.className = 'space-y-2';
 
-                    birds.forEach((bird, index) => {
+                    birds.forEach((bird) => {
                         const li = document.createElement('li');
                         li.className = 'list-item p-3 sm:p-4 hover:bg-[#fff9e9] rounded-lg cursor-pointer';
-                        li.setAttribute('data-index', sortedBirds.indexOf(bird));
+                        li.setAttribute('data-name', bird.name);
                         li.innerHTML = `
                             <p class="font-semibold">${bird.name}</p>
                             <p class="text-sm text-gray-500">${bird.species}</p>
@@ -289,10 +333,10 @@
                     listContainer.appendChild(sectionDiv);
                 }
             };
-
-            renderSection("Koguty", roosters);
-            renderSection("Kury", hens);
-            renderSection("Zmarłe", deceased);
+            
+            renderSection("Koguty", roostersToRender);
+            renderSection("Kury", hensToRender);
+            renderSection("Zmarłe", deceasedToRender);
         }
 
         // Funkcja do wyświetlania widoku szczegółów dla danego ptaka
@@ -408,23 +452,102 @@
             document.getElementById('full-gallery-image').src = currentImages[currentImageIndex];
         }
 
+        // Funkcja do renderowania filtrów gatunków
+        function renderSpeciesFilters() {
+            const speciesFiltersContainer = document.getElementById('species-filters');
+            speciesFiltersContainer.innerHTML = '';
+            
+            const uniqueSpecies = [...new Set(allActiveBirds.map(bird => bird.species))];
+            
+            const allBtn = document.createElement('button');
+            allBtn.innerText = "Wszystkie";
+            allBtn.className = `filter-btn ${currentFilter === 'all' ? 'active' : ''}`;
+            allBtn.onclick = () => {
+                currentFilter = 'all';
+                currentFilteredBirds = allActiveBirds;
+                applyFiltersAndSort();
+                updateFilterButtons();
+            };
+            speciesFiltersContainer.appendChild(allBtn);
+
+            uniqueSpecies.forEach(species => {
+                const btn = document.createElement('button');
+                btn.innerText = species;
+                btn.className = `filter-btn ${currentFilter === species ? 'active' : ''}`;
+                btn.onclick = () => {
+                    currentFilter = species;
+                    currentFilteredBirds = allActiveBirds.filter(bird => bird.species === species);
+                    applyFiltersAndSort();
+                    updateFilterButtons();
+                };
+                speciesFiltersContainer.appendChild(btn);
+            });
+            // Dodajemy zmarłe ptaki tylko, jeśli nie są aktywne
+            if (currentFilter === 'all' || deceased.length > 0) {
+                 const deceasedBtn = document.createElement('button');
+                 deceasedBtn.innerText = "Zmarłe";
+                 deceasedBtn.className = `filter-btn ${currentFilter === 'deceased' ? 'active' : ''}`;
+                 deceasedBtn.onclick = () => {
+                     currentFilter = 'deceased';
+                     currentFilteredBirds = deceased;
+                     applyFiltersAndSort();
+                     updateFilterButtons();
+                 };
+                 speciesFiltersContainer.appendChild(deceasedBtn);
+            }
+        }
+
+        // Funkcja do aktualizacji aktywnego przycisku filtra
+        function updateFilterButtons() {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.innerText === currentFilter || (btn.innerText === "Wszystkie" && currentFilter === 'all')) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+        
+        // Funkcja sortująca i renderująca listę
+        function applyFiltersAndSort() {
+            let birdsToSort = [...currentFilteredBirds];
+
+            switch (currentSortOrder) {
+                case 'name':
+                    birdsToSort.sort((a, b) => a.name.localeCompare(b.name));
+                    break;
+                case 'dob':
+                    birdsToSort.sort((a, b) => new Date(a.dob) - new Date(b.dob));
+                    break;
+                case 'ring':
+                    birdsToSort.sort((a, b) => a.ringNumber.localeCompare(b.ringNumber));
+                    break;
+            }
+            renderList(birdsToSort);
+        }
+
 
         // Główne nasłuchiwanie zdarzeń
         document.addEventListener('DOMContentLoaded', () => {
-            renderList();
+            currentFilteredBirds = [...allActiveBirds, ...deceased]; // Domyślnie pokaż wszystkie
+            applyFiltersAndSort();
+            renderSpeciesFilters();
 
             // Ustawianie liczników ptaków po załadowaniu strony
             document.getElementById('rooster-count').innerText = roosters.length;
             document.getElementById('hen-count').innerText = hens.length;
             document.getElementById('deceased-count').innerText = deceased.length;
-            document.getElementById('total-count').innerText = sortedBirds.length;
+            document.getElementById('total-count').innerText = allBirds.length;
 
             // Obsługa kliknięć na elementach listy
             document.getElementById('chicken-list-container').addEventListener('click', (event) => {
                 const clickedLi = event.target.closest('li');
                 if (clickedLi) {
-                    const index = parseInt(clickedLi.getAttribute('data-index'));
-                    showDetails(sortedBirds[index]);
+                    const birdName = clickedLi.getAttribute('data-name');
+                    const bird = allBirds.find(b => b.name === birdName);
+                    if (bird) {
+                        showDetails(bird);
+                    }
                 }
             });
 
@@ -440,13 +563,15 @@
                 const listItems = document.querySelectorAll('#chicken-list-container li');
 
                 listItems.forEach(item => {
-                    const index = parseInt(item.getAttribute('data-index'));
-                    const bird = sortedBirds[index];
-                    const textContent = `${bird.name} ${bird.species} ${bird.ringNumber}`.toLowerCase();
-                    if (textContent.includes(query)) {
-                        item.classList.remove('hidden');
-                    } else {
-                        item.classList.add('hidden');
+                    const birdName = item.getAttribute('data-name');
+                    const bird = currentFilteredBirds.find(b => b.name === birdName);
+                    if (bird) {
+                        const textContent = `${bird.name} ${bird.species} ${bird.ringNumber}`.toLowerCase();
+                        if (textContent.includes(query)) {
+                            item.classList.remove('hidden');
+                        } else {
+                            item.classList.add('hidden');
+                        }
                     }
                 });
             });
@@ -461,7 +586,19 @@
             // Dodaj nasłuchiwanie przycisków nawigacyjnych w modal-u
             document.getElementById('full-next-btn').addEventListener('click', nextFullImage);
             document.getElementById('full-prev-btn').addEventListener('click', prevFullImage);
+
+            // Obsługa przycisków sortowania
+            document.getElementById('sort-buttons').addEventListener('click', (event) => {
+                const sortBtn = event.target.closest('.sort-btn');
+                if (sortBtn) {
+                    document.querySelectorAll('.sort-btn').forEach(btn => btn.classList.remove('active'));
+                    sortBtn.classList.add('active');
+                    currentSortOrder = sortBtn.dataset.sort;
+                    applyFiltersAndSort();
+                }
+            });
         });
     </script>
 </body>
 </html>
+

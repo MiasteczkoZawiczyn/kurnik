@@ -3,58 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kurnik</title>
+    <title>Kurnik - Album</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Dodane biblioteki do generowania PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
+            background-color: #ffffff; /* Zmieniono tło na białe */
+            color: #4a4a4a;
+            animation: fadeIn 1s ease-in-out;
         }
         .container {
             max-width: 960px;
         }
-        .chicken-card {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            transition: transform 0.2s, box-shadow 0.2s;
+        .main-list-card {
+            background-color: #f7f7f7;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
-        .chicken-card:hover {
-            transform: scale(1.03);
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        .list-item {
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+            border-radius: 8px;
         }
-        .chicken-card .image-wrapper {
+        .list-item:hover {
+            background-color: #f0f0f0;
+            transform: translateX(5px);
+        }
+        .detail-view {
+            transition: opacity 0.3s ease-in-out;
+        }
+        .image-gallery-container {
             position: relative;
-            width: 150px;
-            height: 150px;
-            margin-bottom: 1rem;
+            height: 300px; /* Fixed height for image gallery */
             overflow: hidden;
-            border-radius: 0.5rem;
-            border: 2px solid #d1d5db;
+            border-radius: 8px;
         }
-        .chicken-card img {
+        .image-gallery-track {
+            display: flex;
+            height: 100%;
+            transition: transform 0.5s ease-in-out;
+        }
+        .gallery-image-wrapper {
+            flex-shrink: 0;
             width: 100%;
             height: 100%;
-            object-fit: contain;
-            cursor: pointer;
-            transition: transform 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        .chicken-card img:hover {
+        .gallery-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s ease-in-out;
+        }
+        .gallery-image:hover {
             transform: scale(1.05);
         }
-        .deceased-card {
-            filter: grayscale(80%);
-            opacity: 0.7;
-            border: 2px solid #e5e7eb;
+        .gallery-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 10;
+            border-radius: 9999px;
+            transition: background 0.3s;
         }
-        .deceased-card:hover {
-            transform: none;
-            box-shadow: none;
+        .gallery-arrow:hover {
+            background: rgba(0, 0, 0, 0.7);
+        }
+        .gallery-arrow.left {
+            left: 10px;
+        }
+        .gallery-arrow.right {
+            right: 10px;
         }
         .modal {
             display: none;
@@ -74,496 +104,110 @@
             display: flex;
             opacity: 1;
         }
-        .gallery-container {
+        .full-gallery-container {
             position: relative;
-            max-width: 90vw;
-            max-height: 90vh;
+            width: 90vw;
+            height: 90vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
         }
-        .gallery-track {
-            display: flex;
-            transition: transform 0.5s ease-in-out;
-            width: 100%;
-            height: 100%;
-        }
-        .gallery-image-wrapper {
-            flex-shrink: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .gallery-image {
+        .full-gallery-image {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
-            cursor: grab;
-            transition: transform 0.3s ease-out;
         }
-        .gallery-image.grabbing {
-            cursor: grabbing;
-        }
+        /* Style for the close button */
         .close-button {
             position: absolute;
             top: 20px;
-            right: 35px;
-            color: #f1f1f1;
-            font-size: 40px;
-            font-weight: bold;
-            transition: 0.3s;
-            z-index: 11;
-        }
-        .close-button:hover,
-        .close-button:focus {
-            color: #bbb;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        .download-btn {
-            background: linear-gradient(90deg, #3b82f6, #10b981);
-            color: white;
-            font-weight: 600;
-            padding: 0.75rem 1.5rem;
-            border-radius: 9999px;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .download-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-        }
-        .hide-on-pdf {
-            display: none !important;
-        }
-        /* Nowe style dla przycisków strzałek */
-        .gallery-arrow {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(0, 0, 0, 0.5);
-            color: white;
-            border: none;
-            padding: 1rem 1.5rem;
-            font-size: 2rem;
-            cursor: pointer;
-            z-index: 10;
-            transition: background 0.3s;
-        }
-        .gallery-arrow:hover {
-            background: rgba(0, 0, 0, 0.7);
-        }
-        .gallery-arrow.left {
-            left: 20px;
-            border-radius: 50%;
-        }
-        .gallery-arrow.right {
-            right: 20px;
-            border-radius: 50%;
-        }
-        /* Nowe style dla kropek nawigacyjnych */
-        .gallery-dots {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 8px;
-            z-index: 10;
-        }
-        .dot {
-            width: 10px;
-            height: 10px;
-            background-color: rgba(255, 255, 255, 0.5);
-            border-radius: 50%;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .dot.active {
-            background-color: white;
-        }
-        /* Styl dla komunikatu */
-        #notification-box {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 10px;
+            right: 30px;
             z-index: 1001;
-            display: none;
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out;
-            text-align: center;
+            padding: 0.5rem 1rem;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
         }
-        #notification-box.show {
-            display: block;
-            opacity: 1;
+        .close-button:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+            transform: scale(1.05);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center p-4 sm:p-8">
+<body class="bg-[#ffffff] min-h-screen flex flex-col items-center p-4 sm:p-8">
 
     <!-- Nagłówek -->
     <header class="w-full text-center py-8">
-        <h1 class="text-4xl font-bold text-gray-800">Kurnik 🐔</h1>
-        <p class="text-xl text-gray-600 mt-2">Lista kur</p>
-        <!-- Przycisk do pobierania PDF -->
-        <button id="download-pdf" class="download-btn mt-6">📄 Pobierz listę jako PDF</button>
+        <h1 class="text-4xl font-bold text-gray-800">Album Kurnik 🐔</h1>
+        <p class="text-xl text-gray-600 mt-2">Wybierz ptaka, aby zobaczyć szczegóły</p>
     </header>
 
-    <!-- Statystyki -->
-    <div class="w-full container bg-white rounded-xl shadow-lg p-6 sm:p-8 mb-8 flex flex-wrap justify-between items-center text-center">
-        <div class="flex-1 min-w-[120px] p-2">
-            <p class="text-4xl font-bold text-blue-600" id="total-count">0</p>
-            <p class="text-gray-500">Razem</p>
+    <!-- Widok główny z listą -->
+    <main id="main-list-view" class="w-full container main-list-card p-6 sm:p-8">
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
+            <h2 class="text-2xl font-bold text-gray-700">Lista ptaków</h2>
+            <!-- Liczniki ptaków -->
+            <div class="flex gap-4 text-base font-semibold text-gray-600">
+                <span>Koguty: <span id="rooster-count" class="font-bold text-gray-800">0</span></span>
+                <span>Kury: <span id="hen-count" class="font-bold text-gray-800">0</span></span>
+                <span>Zmarłe: <span id="deceased-count" class="font-bold text-gray-800">0</span></span>
+                <span>Razem: <span id="total-count" class="font-bold text-gray-800">0</span></span>
+            </div>
         </div>
-        <div class="flex-1 min-w-[120px] p-2">
-            <p class="text-4xl font-bold text-green-600" id="chicken-count">0</p>
-            <p class="text-gray-500">Kury</p>
-        </div>
-        <div class="flex-1 min-w-[120px] p-2">
-            <p class="text-4xl font-bold text-red-600" id="rooster-count">0</p>
-            <p class="text-gray-500">Koguty</p>
-        </div>
-    </div>
-
-    <!-- Lista kur - zawartość będzie generowana dynamicznie przez JavaScript -->
-    <main id="pdf-content" class="w-full container bg-white rounded-xl shadow-lg p-6 sm:p-8 mb-8">
-        <h2 class="text-2xl font-bold text-gray-700 mb-4">Aktualna lista</h2>
-        <!-- Pole wyszukiwania - dodano klasę do ukrycia w PDF -->
-        <div class="mb-6 hide-on-pdf">
-            <input type="text" id="search-input" placeholder="Wyszukaj po imieniu, gatunku lub dacie urodzenia..." class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
-        </div>
-
-        <div id="chicken-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            <!-- Tutaj zostaną wstawione karty kur i kogutów po załadowaniu strony -->
+        <input type="text" id="search-input" placeholder="Wyszukaj po imieniu..." class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-500 mb-6">
+        
+        <!-- Sekcje dla kogutów, kur i zmarłych -->
+        <div id="chicken-list-container" class="space-y-6">
+            <!-- Tutaj zostaną wyrenderowane listy przez JavaScript -->
         </div>
     </main>
 
-    <!-- Sekcja dla kur, które odeszły -->
-    <section class="w-full container bg-white rounded-xl shadow-lg p-6 sm:p-8 mt-4">
-        <h2 class="text-2xl font-bold text-gray-700 mb-4">Kury lub koguty, które odeszły 😔</h2>
-        <div id="deceased-chicken-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            <!-- Tutaj zostaną wstawione karty zmarłych kur -->
+    <!-- Widok szczegółów (początkowo ukryty) -->
+    <section id="detail-view" class="w-full container main-list-card p-6 sm:p-8 hidden">
+        <button id="back-button" class="mb-4 text-blue-500 hover:text-blue-700 font-semibold transition-colors flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+            </svg>
+            Wróć do listy
+        </button>
+
+        <!-- Szczegóły ptaka -->
+        <div id="chicken-details" class="flex flex-col md:flex-row md:items-start gap-8">
+            <div id="image-container" class="w-full md:w-1/2 image-gallery-container flex-shrink-0">
+                <div id="image-gallery-track" class="image-gallery-track"></div>
+                <button id="prev-btn" class="gallery-arrow left" onclick="prevImage()">&#10094;</button>
+                <button id="next-btn" class="gallery-arrow right" onclick="nextImage()">&#10095;</button>
+            </div>
+            
+            <div class="w-full md:w-1/2">
+                <h3 id="detail-name" class="text-3xl font-bold text-gray-900 mb-2"></h3>
+                <p id="detail-species" class="text-lg text-gray-700 mb-1"><span class="font-semibold">Gatunek:</span> </p>
+                <p id="detail-dob" class="text-lg text-gray-700 mb-1"><span class="font-semibold">Data urodzenia:</span> </p>
+                <p id="detail-ring" class="text-lg text-gray-700 mb-1"><span class="font-semibold">Nr. obrączki:</span> </p>
+                <p id="detail-status" class="text-lg text-red-600 font-semibold hidden"></p>
+            </div>
         </div>
     </section>
 
-    <!-- Modal do powiększania zdjęć -->
-    <div id="imageModal" class="modal">
-        <span class="close-button" onclick="closeModal()">&times;</span>
-        <div class="gallery-container">
-            <!-- Nowe przyciski strzałek -->
-            <button id="prev-btn" class="gallery-arrow left" onclick="prevImage()">&#10094;</button>
-            <div id="gallery-track" class="gallery-track"></div>
-            <button id="next-btn" class="gallery-arrow right" onclick="nextImage()">&#10095;</button>
-            <!-- Kropki nawigacyjne -->
-            <div id="gallery-dots" class="gallery-dots"></div>
-        </div>
-        <!-- Komunikat informacyjny -->
-        <div id="notification-box">
-            <span>Przewiń, aby powiększyć/pomniejszyć. Przytrzymaj i przeciągnij, aby przesunąć.</span>
+    <!-- Modal galerii pełnoekranowej -->
+    <div id="fullscreen-modal" class="modal">
+        <button class="close-button" onclick="closeFullscreenModal()">Zamknij</button>
+        <div class="full-gallery-container">
+            <button id="full-prev-btn" class="gallery-arrow left" onclick="prevFullImage()">&#10094;</button>
+            <div id="full-gallery-track" class="image-gallery-track"></div>
+            <button id="full-next-btn" class="gallery-arrow right" onclick="nextFullImage()">&#10095;</button>
         </div>
     </div>
 
-    <!-- Skrypty JavaScript -->
     <script>
-        // Global variables for the gallery and its state
-        let currentImages = [];
-        let currentImageIndex = 0;
-        let zoomLevel = 1;
-        let panX = 0;
-        let panY = 0;
-        let isDragging = false;
-        let lastPanX = 0;
-        let lastPanY = 0;
-
-        /**
-         * Applies the current zoom and pan transformation to the active image.
-         */
-        function applyTransform() {
-            const currentImage = document.querySelector('#gallery-track .gallery-image-wrapper:nth-child(' + (currentImageIndex + 1) + ') .gallery-image');
-            if (currentImage) {
-                // Prevent over-panning
-                const containerWidth = currentImage.parentElement.clientWidth;
-                const containerHeight = currentImage.parentElement.clientHeight;
-                const imageWidth = currentImage.naturalWidth * zoomLevel;
-                const imageHeight = currentImage.naturalHeight * zoomLevel;
-
-                const maxPanX = Math.max(0, (imageWidth * zoomLevel - containerWidth) / 2 / zoomLevel);
-                const maxPanY = Math.max(0, (imageHeight * zoomLevel - containerHeight) / 2 / zoomLevel);
-
-                panX = Math.min(Math.max(panX, -maxPanX), maxPanX);
-                panY = Math.min(Math.max(panY, -maxPanY), maxPanY);
-
-                currentImage.style.transform = `scale(${zoomLevel}) translate(${panX}px, ${panY}px)`;
-            }
-        }
-        
-        /**
-         * Resets the zoom and pan state to default.
-         */
-        function resetTransform() {
-            zoomLevel = 1;
-            panX = 0;
-            panY = 0;
-            applyTransform();
-        }
-
-        /**
-         * Handles mouse down event for dragging.
-         * @param {MouseEvent} e The mouse event object.
-         */
-        function handleMouseDown(e) {
-            const currentImage = document.querySelector('#gallery-track .gallery-image-wrapper:nth-child(' + (currentImageIndex + 1) + ') .gallery-image');
-            if (currentImage && zoomLevel > 0.5) { // Only allow dragging when not fully zoomed out
-                e.preventDefault();
-                isDragging = true;
-                lastPanX = e.clientX;
-                lastPanY = e.clientY;
-                currentImage.classList.add('grabbing');
-                currentImage.style.transition = 'none'; // Disable transition during drag
-            }
-        }
-
-        /**
-         * Handles mouse move event for dragging.
-         * @param {MouseEvent} e The mouse event object.
-         */
-        function handleMouseMove(e) {
-            if (!isDragging) return;
-            e.preventDefault();
-            const dx = e.clientX - lastPanX;
-            const dy = e.clientY - lastPanY;
-            panX += dx / zoomLevel;
-            panY += dy / zoomLevel;
-            lastPanX = e.clientX;
-            lastPanY = e.clientY;
-            applyTransform();
-        }
-
-        /**
-         * Handles mouse up event to stop dragging.
-         */
-        function handleMouseUp() {
-            isDragging = false;
-            const currentImage = document.querySelector('#gallery-track .gallery-image-wrapper:nth-child(' + (currentImageIndex + 1) + ') .gallery-image');
-            if (currentImage) {
-                currentImage.classList.remove('grabbing');
-                currentImage.style.transition = 'transform 0.3s ease-out';
-            }
-        }
-
-        /**
-         * Handles mouse wheel event for zooming.
-         * @param {WheelEvent} e The wheel event object.
-         */
-        function handleWheel(e) {
-            e.preventDefault();
-            const zoomSpeed = 0.1;
-            const newZoom = zoomLevel + (e.deltaY > 0 ? -zoomSpeed : zoomSpeed);
-            zoomLevel = Math.min(Math.max(0.5, newZoom), 5); // Allow zoom to 0.5x, max 5x
-            applyTransform();
-        }
-
-        /**
-         * Handles touch start event for dragging (mobile).
-         * @param {TouchEvent} e The touch event object.
-         */
-        function handleTouchStart(e) {
-            if (e.touches.length === 0.6 && zoomLevel > 0.5) {
-                isDragging = true;
-                lastPanX = e.touches[0].clientX;
-                lastPanY = e.touches[0].clientY;
-            } else if (e.touches.length === 2) {
-                // Handle pinch-to-zoom (optional, but good practice)
-                const distance = Math.hypot(
-                    e.touches[0].clientX - e.touches[1].clientX,
-                    e.touches[0].clientY - e.touches[1].clientY
-                );
-                e.preventDefault(); // Prevent default browser zoom
-            }
-        }
-
-        /**
-         * Handles touch move event for dragging (mobile).
-         * @param {TouchEvent} e The touch event object.
-         */
-        function handleTouchMove(e) {
-            if (isDragging && e.touches.length === 1) {
-                const dx = e.touches[0].clientX - lastPanX;
-                const dy = e.touches[0].clientY - lastPanY;
-                panX += dx / zoomLevel;
-                panY += dy / zoomLevel;
-                lastPanX = e.touches[0].clientX;
-                lastPanY = e.touches[0].clientY;
-                applyTransform();
-            } else if (e.touches.length === 2) {
-                // Handle pinch-to-zoom (optional)
-                const newDistance = Math.hypot(
-                    e.touches[0].clientX - e.touches[1].clientX,
-                    e.touches[0].clientY - e.touches[1].clientY
-                );
-                const zoomSpeed = 0.01;
-                const newZoom = zoomLevel + (newDistance - initialDistance) * zoomSpeed;
-                zoomLevel = Math.min(Math.max(0.5, newZoom), 5);
-                applyTransform();
-                initialDistance = newDistance;
-            }
-        }
-
-        /**
-         * Handles touch end event to stop dragging (mobile).
-         */
-        function handleTouchEnd() {
-            isDragging = false;
-        }
-
-        /**
-         * Displays a notification message.
-         */
-        function showNotification() {
-            const notificationBox = document.getElementById('notification-box');
-            notificationBox.classList.add('show');
-            setTimeout(() => {
-                notificationBox.classList.remove('show');
-            }, 5000); // Hide after 5 seconds
-        }
-
-        // --- Gallery functions ---
-
-        // Funkcja do otwierania modalu
-        function openModal(images, startIndex = 0) {
-            const modal = document.getElementById('imageModal');
-            const galleryTrack = document.getElementById('gallery-track');
-            const galleryDots = document.getElementById('gallery-dots');
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
-
-            galleryTrack.innerHTML = '';
-            galleryDots.innerHTML = '';
-            currentImages = images;
-            currentImageIndex = startIndex;
-            
-            currentImages.forEach((src, index) => {
-                const imgWrapper = document.createElement('div');
-                imgWrapper.className = 'gallery-image-wrapper';
-                const img = document.createElement('img');
-                img.src = src;
-                img.alt = "Powiększone zdjęcie kurczaka";
-                img.className = 'gallery-image';
-                img.onerror = () => {
-                    img.src = 'https://placehold.co/300x300/e2e8f0/000000?text=Brak+zdjęcia';
-                };
-                imgWrapper.appendChild(img);
-                galleryTrack.appendChild(imgWrapper);
-            });
-            
-            galleryTrack.style.width = `${currentImages.length * 100}%`;
-            
-            if (currentImages.length > 1) {
-                for (let i = 0; i < currentImages.length; i++) {
-                    const dot = document.createElement('span');
-                    dot.className = 'dot';
-                    dot.onclick = () => goToImage(i);
-                    galleryDots.appendChild(dot);
-                }
-                updateDots();
-                prevBtn.style.display = 'block';
-                nextBtn.style.display = 'block';
-            } else {
-                prevBtn.style.display = 'none';
-                nextBtn.style.display = 'none';
-            }
-            
-            modal.style.display = 'flex';
-            setTimeout(() => modal.classList.add('show'), 10);
-            
-            // Go to the initial image and reset transform
-            goToImage(currentImageIndex);
-
-            // Add event listeners to the modal itself, not the image
-            modal.addEventListener('wheel', handleWheel);
-            modal.addEventListener('mousedown', handleMouseDown);
-            modal.addEventListener('mousemove', handleMouseMove);
-            modal.addEventListener('mouseup', handleMouseUp);
-            modal.addEventListener('mouseleave', handleMouseUp);
-            modal.addEventListener('touchstart', handleTouchStart);
-            modal.addEventListener('touchmove', handleTouchMove);
-            modal.addEventListener('touchend', handleTouchEnd);
-            
-            // Show instruction notification
-            showNotification();
-        }
-
-        // Funkcja do zamykania modalu
-        function closeModal() {
-            const modal = document.getElementById('imageModal');
-            modal.classList.remove('show');
-            setTimeout(() => {
-                modal.style.display = 'none';
-                document.getElementById('gallery-track').innerHTML = '';
-                document.getElementById('gallery-dots').innerHTML = '';
-            }, 300);
-
-            // Remove event listeners
-            const modalElement = document.getElementById('imageModal');
-            modalElement.removeEventListener('wheel', handleWheel);
-            modalElement.removeEventListener('mousedown', handleMouseDown);
-            modalElement.removeEventListener('mousemove', handleMouseMove);
-            modalElement.removeEventListener('mouseup', handleMouseUp);
-            modalElement.removeEventListener('mouseleave', handleMouseUp);
-            modalElement.removeEventListener('touchstart', handleTouchStart);
-            modalElement.removeEventListener('touchmove', handleTouchMove);
-            modalElement.removeEventListener('touchend', handleTouchEnd);
-        }
-
-        // Zamykanie modalu po kliknięciu poza zdjęciem
-        window.onclick = function(event) {
-            const modal = document.getElementById('imageModal');
-            if (event.target == modal) {
-                closeModal();
-            }
-        }
-
-        // Aktualizacja stanu kropek
-        function updateDots() {
-            const dots = document.querySelectorAll('.dot');
-            dots.forEach((dot, index) => {
-                dot.classList.remove('active');
-                if (index === currentImageIndex) {
-                    dot.classList.add('active');
-                }
-            });
-        }
-
-        // Funkcja do przechodzenia do konkretnego obrazu
-        function goToImage(index) {
-            currentImageIndex = index;
-            const galleryTrack = document.getElementById('gallery-track');
-            galleryTrack.style.transform = `translateX(-${currentImageIndex * 100}%)`;
-            updateDots();
-            resetTransform(); // Reset zoom and pan for the new image
-        }
-
-        // Funkcja do przechodzenia do poprzedniego obrazu z animacją
-        function prevImage() {
-            currentImageIndex = (currentImageIndex - 1 + currentImages.length) % currentImages.length;
-            goToImage(currentImageIndex);
-        }
-
-        // Funkcja do przechodzenia do następnego obrazu z animacją
-        function nextImage() {
-            currentImageIndex = (currentImageIndex + 1) % currentImages.length;
-            goToImage(currentImageIndex);
-        }
-
-        // Dane o kurach i kogutach - teraz przechowywane w JS
-        // Zmieniono lokalne ścieżki na pliki tymczasowe, aby aplikacja działała poprawnie w przeglądarce
+        // Dane o ptakach
         const allChickens = [
             { name: "Kogut Lucjan", species: "Rosa Jarzębata", dob: "1 Lipiec 2024", ringNumber: "000", images: ["files/LucjanKogut.png"] },
             { name: "Kogut Henio", species: "Czarny typ włoszka Kogut", dob: "24 Czerwiec 2025", ringNumber: "Nieznane", images: ["https://placehold.co/300x300/e2e8f0/000000?text=Henio"] },
@@ -584,243 +228,227 @@
             { name: "Celina", species: "Rosa Czerwona", dob: "Marzec 2020", ringNumber: "Nieznane", images: ["https://placehold.co/300x300/e2e8f0/000000?text=Celina"] },
         ];
 
-        // Dane o kurach, które odeszły
         const deceasedChickens = [
-            { name: "Nieznany Kogut", species: "Nieznane", dob: "Nieznane", dateOfDeath: "Nieznane", ringNumber: "Nieznane", images: ["https://placehold.co/300x300/e2e8f0/000000?text=Przyklad+1"] },
-            { name: "Nieznany kura", species: "Nieznane", dob: "Nieznane", dateOfDeath: "Nieznane", ringNumber: "Nieznane", images: ["https://placehold.co/300x300/e2e8f0/000000?text=Przyklad+2"] }
+            { name: "Nieznany Kogut", species: "Nieznane", dob: "Nieznane", dateOfDeath: "Nieznane", ringNumber: "Nieznane", images: ["https://placehold.co/600x600/a8a8a8/ffffff?text=Zmarły+Kogut"] },
+            { name: "Nieznany kura", species: "Nieznane", dob: "Nieznane", dateOfDeath: "Nieznane", ringNumber: "Nieznane", images: ["https://placehold.co/600x600/a8a8a8/ffffff?text=Zmarła+Kura"] }
         ];
+
+        // Globalny stan
+        let currentImageIndex = 0;
+        let currentImages = [];
         
-        // Tablica do mapowania polskich nazw miesięcy na liczby
-        const monthMap = {
-            "Styczeń": 0, "Luty": 1, "Marzec": 2, "Kwiecień": 3, "Maj": 4, "Czerwiec": 5,
-            "Lipiec": 6, "Sierpień": 7, "Wrzesień": 8, "Październik": 9, "Listopad": 10, "Grudzień": 11
-        };
-        
-        let sortedChickens = []; // Global variable to store the initial sorted list
+        // Sortowanie ptaków: najpierw koguty, potem kury (alfabetycznie), na końcu zmarłe
+        const allBirds = [...allChickens, ...deceasedChickens.map(bird => ({ ...bird, deceased: true }))];
+        const roosters = allBirds.filter(bird => bird.name.startsWith("Kogut") && !bird.deceased);
+        const hens = allBirds.filter(bird => !bird.name.startsWith("Kogut") && !bird.deceased).sort((a, b) => a.name.localeCompare(b.name));
+        const deceased = allBirds.filter(bird => bird.deceased);
+        const sortedBirds = [...roosters, ...hens, ...deceased];
 
-        /**
-         * Parses a Polish date string into a Date object.
-         * Handles formats like "1 Lipiec 2024", "Maj/Czerwiec 2025", "Nieznane".
-         * For unknown dates, it returns a very large timestamp to place them at the end.
-         * For month ranges, it takes the first month.
-         * @param {string} dateStr The date string to parse.
-         * @returns {Date} A Date object representing the date.
-         */
-        function parseDate(dateStr) {
-            // Check for unknown date, return a very early date to put it at the end
-            if (dateStr.includes("Nieznane")) {
-                return new Date(0); // A very early timestamp
-            }
-
-            // Remove "ok." prefix if present
-            dateStr = dateStr.replace("ok. ", "");
-
-            // Handle date with day, month, and year (e.g., "1 Lipiec 2024")
-            let parts = dateStr.split(" ");
-            if (parts.length >= 3) {
-                let day = parseInt(parts[0]);
-                let month = monthMap[parts[1]];
-                let year = parseInt(parts[2]);
-                if (!isNaN(day) && month !== undefined && !isNaN(year)) {
-                    return new Date(year, month, day);
-                }
-            }
-
-            // Handle date with just month and year (e.g., "Kwiecień 2023")
-            if (parts.length >= 2) {
-                let month = monthMap[parts[0]];
-                let year = parseInt(parts[1]);
-                if (month !== undefined && !isNaN(year)) {
-                    return new Date(year, month, 1);
-                }
-            }
-
-            // Handle date with month range (e.g., "Maj/Czerwiec 2025")
-            let monthRangeParts = dateStr.split("/");
-            if (monthRangeParts.length >= 2) {
-                let firstMonth = monthRangeParts[0];
-                let year = parseInt(monthRangeParts[1].split(" ")[1]);
-                if (monthMap[firstMonth] !== undefined && !isNaN(year)) {
-                    return new Date(year, monthMap[firstMonth], 1);
-                }
-            }
+        // Funkcja do renderowania listy ptaków
+        function renderList() {
+            const listContainer = document.getElementById('chicken-list-container');
+            listContainer.innerHTML = '';
             
-            // If all parsing fails, return a very early date
-            console.error("Failed to parse date string:", dateStr);
-            return new Date(0);
-        }
+            const renderSection = (title, birds) => {
+                if (birds.length > 0) {
+                    const sectionDiv = document.createElement('div');
+                    sectionDiv.innerHTML = `<h3 class="text-xl font-bold text-gray-700 mb-2">${title}</h3>`;
+                    const ul = document.createElement('ul');
+                    ul.className = 'space-y-2';
 
-        /**
-         * Renders the chicken cards into the DOM.
-         * @param {Array<Object>} chickens The array of chicken objects to render.
-         * @param {string} containerId The ID of the container element.
-         * @param {boolean} isDeceased Whether the chickens are deceased.
-         */
-        function renderChickens(chickens, containerId, isDeceased = false) {
-            const container = document.getElementById(containerId);
-            if (!container) return; // Prevent errors if container not found
-            container.innerHTML = ''; // Clear existing content
+                    birds.forEach((bird, index) => {
+                        const li = document.createElement('li');
+                        li.className = 'list-item p-3 sm:p-4 hover:bg-[#fff9e9] rounded-lg cursor-pointer';
+                        li.setAttribute('data-index', sortedBirds.indexOf(bird));
+                        li.innerHTML = `
+                            <p class="font-semibold">${bird.name}</p>
+                            <p class="text-sm text-gray-500">${bird.species}</p>
+                            <p class="text-sm text-gray-500">Nr. obrączki: ${bird.ringNumber}</p>
+                        `;
+                        ul.appendChild(li);
 
-            if (chickens.length === 0 && !isDeceased) {
-                container.innerHTML = `<p class="text-center text-gray-500 col-span-full">Brak pasujących kur lub kogutów.</p>`;
-            }
-
-            // Update counts for the main list
-            if (!isDeceased) {
-                const totalCount = chickens.length;
-                const chickenCount = chickens.filter(c => !c.isRooster).length;
-                const roosterCount = totalCount - chickenCount;
-
-                document.getElementById('total-count').innerText = totalCount;
-                document.getElementById('chicken-count').innerText = chickenCount;
-                document.getElementById('rooster-count').innerText = roosterCount;
-            }
-            
-            chickens.forEach(chicken => {
-                const card = document.createElement('div');
-                card.className = `chicken-card bg-gray-50 rounded-lg p-4 shadow-sm ${isDeceased ? 'deceased-card' : ''}`;
-                
-                let dobOrDeathInfo = `<p class="text-gray-600"><span class="font-bold">Data urodzenia:</span> ${chicken.dob}</p>`;
-                if (isDeceased) {
-                    dobOrDeathInfo = `<p class="text-gray-600"><span class="font-bold">Data urodzenia:</span> ${chicken.dob}<br><span class="font-bold">Data śmierci:</span> ${chicken.dateOfDeath}</p>`;
+                        // Dodanie separatora po każdym elemencie, z wyjątkiem ostatniego
+                        if (index < birds.length - 1) {
+                            const separator = document.createElement('hr');
+                            separator.className = 'my-2 border-gray-200';
+                            ul.appendChild(separator);
+                        }
+                    });
+                    sectionDiv.appendChild(ul);
+                    listContainer.appendChild(sectionDiv);
                 }
-
-                card.innerHTML = `
-                    <div class="image-wrapper">
-                        <img src="${chicken.images[0]}" alt="${chicken.name}" onclick='openModal(${JSON.stringify(chicken.images)})' onerror="this.onerror=null; this.src='https://placehold.co/150x150/e2e8f0/000000?text=Brak+zdjęcia';">
-                    </div>
-                    <h3 class="text-2xl font-semibold text-gray-900">${chicken.name}</h3>
-                    <p class="text-gray-600 mt-1">
-                        <span class="font-bold">Gatunek:</span> ${chicken.species}
-                    </p>
-                    ${dobOrDeathInfo}
-                    <p class="text-gray-600">
-                        <span class="font-bold">Nr. obrączki:</span> ${chicken.ringNumber}
-                    </p>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        /**
-         * Filters the chicken list based on the search input.
-         */
-        function filterChickens() {
-            const query = document.getElementById('search-input').value.toLowerCase();
-            const filteredChickens = sortedChickens.filter(chicken => {
-                const nameMatch = chicken.name.toLowerCase().includes(query);
-                const speciesMatch = chicken.species.toLowerCase().includes(query);
-                const dobMatch = chicken.dob.toLowerCase().includes(query);
-                return nameMatch || speciesMatch || dobMatch;
-            });
-            renderChickens(filteredChickens, 'chicken-list');
-        }
-        
-        /**
-         * Generates a multi-page PDF from the main content section, with page breaks, header, and footer.
-         */
-        async function generatePDF() {
-            const doc = new window.jspdf.jsPDF("p", "mm", "a4");
-            const pdfWidth = doc.internal.pageSize.getWidth();
-            const pdfHeight = doc.internal.pageSize.getHeight();
-            const margin = 10;
-            let pageNumber = 1;
-            
-            // Get current counts from the main app
-            const totalCount = document.getElementById('total-count').innerText;
-            const chickenCount = document.getElementById('chicken-count').innerText;
-            const roosterCount = document.getElementById('rooster-count').innerText;
-
-            const chickenList = document.getElementById('chicken-list');
-            const chickenCards = Array.from(chickenList.children);
-            const cardsPerPage = 12;
-
-            // Function to add header to a page
-            const addHeader = (pageNumber) => {
-                doc.setFontSize(13);
-                doc.text(`Aktualna lista: ${totalCount} `, margin, margin + 5);
-                doc.text(`Razem: ${totalCount} Kury: ${chickenCount}, Koguty: ${roosterCount}`, margin, margin + 12);
-                doc.line(margin, margin + 15, pdfWidth - margin, margin + 15);
             };
 
-            // Function to add footer to a page
-            const addFooter = (pageNumber) => {
-                doc.setFontSize(10);
-                doc.text(`Generator PDF opracowany przez — O5K4R_ TECHNOLOG | Strona nr. ${pageNumber}`, pdfWidth - margin, pdfHeight - margin - 2, { align: 'right' });
-            };
-
-            // Loop through the cards and generate pages
-            for (let i = 0; i < chickenCards.length; i += cardsPerPage) {
-                // If not the first page, add a new one
-                if (i > 0) {
-                    doc.addPage();
-                    pageNumber++;
-                }
-
-                // Add header and footer to the new page
-                addHeader(pageNumber);
-                addFooter(pageNumber);
-
-                // Create a temporary container for the cards on this page
-                const tempDiv = document.createElement('div');
-                
-                const cardsToProcess = chickenCards.slice(i, i + cardsPerPage);
-                cardsToProcess.forEach(card => tempDiv.appendChild(card.cloneNode(true)));
-
-                // Set styles to make sure PDF rendering is correct
-                tempDiv.style.display = 'grid';
-                tempDiv.style.gridTemplateColumns = 'repeat(3, minmax(0, 1fr))';
-                tempDiv.style.gap = '1.5rem';
-                tempDiv.style.paddingTop = '20mm'; // Space for the header
-                document.body.appendChild(tempDiv);
-                
-                const canvas = await html2canvas(tempDiv, {
-                    scale: 2, // Improve image quality
-                    logging: false,
-                    useCORS: true,
-                    allowTaint: true
-                });
-
-                document.body.removeChild(tempDiv);
-
-                const imgData = canvas.toDataURL('image/jpeg');
-                doc.addImage(imgData, 'JPEG', margin, margin + 20, pdfWidth - 2 * margin, (pdfWidth - 2 * margin) * (canvas.height / canvas.width));
-            }
-
-            // Save the PDF
-            doc.save('lista-kur.pdf');
+            renderSection("Koguty", roosters);
+            renderSection("Kury", hens);
+            renderSection("Zmarłe", deceased);
         }
 
+        // Funkcja do wyświetlania widoku szczegółów dla danego ptaka
+        function showDetails(bird) {
+            document.getElementById('main-list-view').classList.add('hidden');
+            const detailView = document.getElementById('detail-view');
+            detailView.classList.remove('hidden');
+
+            // Wypełnianie szczegółów
+            document.getElementById('detail-name').innerText = bird.name;
+            document.getElementById('detail-species').innerHTML = `<span class="font-semibold">Gatunek:</span> ${bird.species}`;
+            
+            const dobElement = document.getElementById('detail-dob');
+            dobElement.innerHTML = `<span class="font-semibold">Data urodzenia:</span> ${bird.dob}`;
+            
+            const ringElement = document.getElementById('detail-ring');
+            ringElement.innerHTML = `<span class="font-semibold">Nr. obrączki:</span> ${bird.ringNumber}`;
+
+            const statusElement = document.getElementById('detail-status');
+            if (bird.deceased) {
+                statusElement.classList.remove('hidden');
+                statusElement.innerText = `Status: Zmarł/a (${bird.dateOfDeath})`;
+            } else {
+                statusElement.classList.add('hidden');
+            }
+
+            // Wypełnianie galerii
+            currentImages = bird.images;
+            currentImageIndex = 0;
+            const galleryTrack = document.getElementById('image-gallery-track');
+            galleryTrack.innerHTML = '';
+            
+            currentImages.forEach((src) => {
+                const imgWrapper = document.createElement('div');
+                imgWrapper.className = 'gallery-image-wrapper';
+                const img = document.createElement('img');
+                img.src = src;
+                img.alt = `Zdjęcie ${bird.name}`;
+                img.className = 'gallery-image';
+                img.onerror = function() { this.src = 'https://placehold.co/300x300/e2e8f0/000000?text=Brak zdjecia'; };
+                img.onclick = () => openFullscreenModal();
+                imgWrapper.appendChild(img);
+                galleryTrack.appendChild(imgWrapper);
+            });
+
+            // Ustawianie wymiarów galerii i pozycji początkowej
+            galleryTrack.style.width = `${currentImages.length * 100}%`;
+            galleryTrack.style.transform = `translateX(0%)`;
+
+            // Obsługa widoczności przycisków nawigacyjnych
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            if (currentImages.length <= 1) {
+                prevBtn.classList.add('hidden');
+                nextBtn.classList.add('hidden');
+            } else {
+                prevBtn.classList.remove('hidden');
+                nextBtn.classList.remove('hidden');
+            }
+        }
+
+        // Funkcja do przesuwania obrazka w małej galerii
+        function nextImage() {
+            currentImageIndex = (currentImageIndex + 1) % currentImages.length;
+            const galleryTrack = document.getElementById('image-gallery-track');
+            galleryTrack.style.transform = `translateX(-${currentImageIndex * 100}%)`;
+        }
+
+        // Funkcja do przesuwania obrazka w małej galerii
+        function prevImage() {
+            currentImageIndex = (currentImageIndex - 1 + currentImages.length) % currentImages.length;
+            const galleryTrack = document.getElementById('image-gallery-track');
+            galleryTrack.style.transform = `translateX(-${currentImageIndex * 100}%)`;
+        }
+
+        // --- Funkcje modala galerii pełnoekranowej ---
+
+        function openFullscreenModal() {
+            const modal = document.getElementById('fullscreen-modal');
+            const galleryTrack = document.getElementById('full-gallery-track');
+            
+            galleryTrack.innerHTML = '';
+            
+            currentImages.forEach((src) => {
+                const imgWrapper = document.createElement('div');
+                imgWrapper.className = 'gallery-image-wrapper';
+                const img = document.createElement('img');
+                img.src = src;
+                img.alt = 'Zdjęcie w pełnym rozmiarze';
+                img.className = 'full-gallery-image';
+                img.onerror = function() { this.src = 'https://placehold.co/600x600/a8a8a8/ffffff?text=Brak zdjecia'; };
+                imgWrapper.appendChild(img);
+                galleryTrack.appendChild(imgWrapper);
+            });
+            
+            galleryTrack.style.width = `${currentImages.length * 100}%`;
+            galleryTrack.style.transform = `translateX(-${currentImageIndex * 100}%)`;
+
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('show'), 10);
+        }
+
+        function closeFullscreenModal() {
+            const modal = document.getElementById('fullscreen-modal');
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+
+        function nextFullImage() {
+            currentImageIndex = (currentImageIndex + 1) % currentImages.length;
+            const galleryTrack = document.getElementById('full-gallery-track');
+            galleryTrack.style.transform = `translateX(-${currentImageIndex * 100}%)`;
+        }
+        
+        function prevFullImage() {
+            currentImageIndex = (currentImageIndex - 1 + currentImages.length) % currentImages.length;
+            const galleryTrack = document.getElementById('full-gallery-track');
+            galleryTrack.style.transform = `translateX(-${currentImageIndex * 100}%)`;
+        }
+
+
+        // Główne nasłuchiwanie zdarzeń
         document.addEventListener('DOMContentLoaded', () => {
-            // Sort chickens by date of birth, from newest to oldest. Unknown dates go to the end.
-            sortedChickens = allChickens.map(chicken => {
-                return {
-                    ...chicken,
-                    isRooster: chicken.name.toLowerCase().includes('kogut'),
-                    parsedDob: parseDate(chicken.dob)
-                };
-            }).sort((a, b) => {
-                // Koguty zawsze na początku, sortowanie według daty od najstarszych do najmłodszych
-                if (a.isRooster && b.isRooster) {
-                    return a.parsedDob.getTime() - b.parsedDob.getTime();
+            renderList();
+
+            // Ustawianie liczników ptaków po załadowaniu strony
+            document.getElementById('rooster-count').innerText = roosters.length;
+            document.getElementById('hen-count').innerText = hens.length;
+            document.getElementById('deceased-count').innerText = deceased.length;
+            document.getElementById('total-count').innerText = sortedBirds.length;
+
+            // Obsługa kliknięć na elementach listy
+            document.getElementById('chicken-list-container').addEventListener('click', (event) => {
+                const clickedLi = event.target.closest('li');
+                if (clickedLi) {
+                    const index = parseInt(clickedLi.getAttribute('data-index'));
+                    showDetails(sortedBirds[index]);
                 }
-                if (a.isRooster && !b.isRooster) {
-                    return -1;
-                }
-                if (!a.isRooster && b.isRooster) {
-                    return 1;
-                }
-                // Kury sortowane od najmłodszych do najstarszych
-                return b.parsedDob.getTime() - a.parsedDob.getTime();
             });
 
-            renderChickens(sortedChickens, 'chicken-list');
-            renderChickens(deceasedChickens, 'deceased-chicken-list', true);
+            // Obsługa kliknięcia przycisku "Wróć do listy"
+            document.getElementById('back-button').addEventListener('click', () => {
+                document.getElementById('detail-view').classList.add('hidden');
+                document.getElementById('main-list-view').classList.remove('hidden');
+            });
 
-            document.getElementById('search-input').addEventListener('input', filterChickens);
-            document.getElementById('download-pdf').addEventListener('click', generatePDF);
+            // Obsługa wyszukiwania
+            document.getElementById('search-input').addEventListener('input', (event) => {
+                const query = event.target.value.toLowerCase();
+                const listItems = document.querySelectorAll('#chicken-list-container li');
+
+                listItems.forEach(item => {
+                    const index = parseInt(item.getAttribute('data-index'));
+                    const bird = sortedBirds[index];
+                    const textContent = `${bird.name} ${bird.species} ${bird.ringNumber}`.toLowerCase();
+                    if (textContent.includes(query)) {
+                        item.classList.remove('hidden');
+                    } else {
+                        item.classList.add('hidden');
+                    }
+                });
+            });
         });
     </script>
 </body>
 </html>
+
 
